@@ -8,20 +8,16 @@ import (
 	"os"
 )
 
-type Output struct {
-	Runtime int32
-	Memory  int32
-	Status  int32
-	Error   string
-}
-
 func main() {
-	dir := flag.String("dir", "/tmp", "compiler working directory")
+	compiler := flag.String("compiler", "NOT NULL", "executable compiler")
+	dir := flag.String("dir", "NOT NULL", "compiler working directory")
+	file := flag.String("file", "NOT NULL", "the original source file")
 	flag.Parse()
 
-	fmt.Println(*dir)
+	fmt.Println(*compiler, "|", *dir, "|", *file)
 
-	err, stdout, stderr := compile(*dir)
+	err, stdout, stderr := compile(*compiler, *dir, *file)
+
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		return
@@ -34,11 +30,10 @@ func main() {
 	}
 }
 
-func compile(dir string) (error, string, string) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
+func compile(compiler, dir, file string) (error, string, string) {
+	var stdout, stderr bytes.Buffer
 
-	cmd := exec.Command("gcc", "Main.c", "-o", "Main")
+	cmd := exec.Command(compiler, file, "-o", "Main")
 	cmd.Dir = dir
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
