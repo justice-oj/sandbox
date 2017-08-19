@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"bytes"
 	"os/exec"
 	"os"
@@ -14,7 +13,7 @@ func main() {
 	file := flag.String("file", "NOT NULL", "the original source file")
 	flag.Parse()
 
-	fmt.Println(*compiler, "|", *dir, "|", *file)
+	//fmt.Println(*compiler, "|", *dir, "|", *file)
 
 	err, stdout, stderr := compile(*compiler, *dir, *file)
 
