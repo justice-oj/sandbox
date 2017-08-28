@@ -1,43 +1,44 @@
 package main
 
 import (
-	"flag"
-	"bytes"
-	"os/exec"
+	"fmt"
 	"os"
-	"path/filepath"
+	"os/exec"
+	"syscall"
 )
 
 func main() {
-	dir := flag.String("dir", "NOT NULL", "sandbox working directory")
-	file := flag.String("file", "NOT NULL", "binary filename")
-	stdin := flag.String("stdin", "NOT NULL", "test case read from stdin")
-	flag.Parse()
+	cmd := exec.Command("/bin/bash")
 
-	//fmt.Println(*dir, "|", *file)
-
-	err, stdout, stderr := run(*dir, *file, *stdin)
-
-	if err != nil {
-		os.Stderr.WriteString(err.Error())
-		return
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = []string{"PS1=[justice] # "}
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWNS |
+			syscall.CLONE_NEWUTS |
+			syscall.CLONE_NEWIPC |
+			syscall.CLONE_NEWPID |
+			syscall.CLONE_NEWNET |
+			syscall.CLONE_NEWUSER,
+		UidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getuid(),
+				Size:        1,
+			},
+		},
+		GidMappings: []syscall.SysProcIDMap{
+			{
+				ContainerID: 0,
+				HostID:      os.Getgid(),
+				Size:        1,
+			},
+		},
 	}
 
-	if len(stderr) > 0 {
-		os.Stderr.WriteString(stderr)
-	} else {
-		os.Stdout.WriteString(stdout)
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Error running the /bin/bash command - %s\n", err)
+		os.Exit(1)
 	}
-}
-
-func run(dir, file, stdin string) (error, string, string) {
-	var stdout, stderr bytes.Buffer
-
-	cmd := exec.Command(dir + string(filepath.Separator) + file)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	cmd.Stdin = bytes.NewReader([]byte(stdin))
-	err := cmd.Run()
-
-	return err, stdout.String(), stderr.String()
 }
