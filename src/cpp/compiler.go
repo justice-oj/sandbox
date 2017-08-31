@@ -10,9 +10,9 @@ import (
 )
 
 func main() {
-	compiler := flag.String("compiler", "gcc", "C compiler with abs path")
-	basedir := flag.String("basedir", "/tmp", "basedir of tmp C code snippet")
-	filename := flag.String("filename", "Main.c", "name of file to be compiled")
+	compiler := flag.String("compiler", "g++", "CPP compiler with abs path")
+	basedir := flag.String("basedir", "/tmp", "basedir of tmp CPP code snippet")
+	filename := flag.String("filename", "Main.cpp", "name of file to be compiled")
 	timeout := flag.Int("timeout", 10, "timeout in seconds")
 	flag.Parse()
 
