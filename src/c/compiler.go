@@ -26,7 +26,7 @@ func main() {
 	cmd.Stderr = &stderr
 	cmd.Dir = *basedir
 
-	time.AfterFunc(time.Duration(*timeout)*time.Second, func() {
+	time.AfterFunc(time.Duration(*timeout)*time.Millisecond, func() {
 		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	})
 	err := cmd.Run()
