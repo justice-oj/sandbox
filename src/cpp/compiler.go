@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+	"github.com/getsentry/raven-go"
 )
 
 func main() {
@@ -33,6 +34,9 @@ func main() {
 	if err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Stderr.WriteString(stderr.String())
+		raven.SetDSN("http://e79ebf76a31a43d18ef7bdfa7381537e:5b21a25106584b39ac22ebf0752412db@sentry.justice.plus/3")
+		raven.CaptureMessage(stderr.String(), nil)
+		raven.CaptureError(err, nil)
 		return
 	}
 
