@@ -35,8 +35,8 @@ func main() {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Stderr.WriteString(stderr.String())
 		raven.SetDSN("http://e79ebf76a31a43d18ef7bdfa7381537e:5b21a25106584b39ac22ebf0752412db@127.0.0.1:12000/3")
-		raven.CaptureMessage(stderr.String(), nil)
-		raven.CaptureErrorAndWait(err, nil)
+		raven.CaptureMessageAndWait(stderr.String(), map[string]string{"error": "Compile Time Exceeded"})
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "Compile Time Exceeded"})
 		return
 	}
 
