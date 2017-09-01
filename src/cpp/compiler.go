@@ -42,3 +42,4 @@ func main() {
 
 	os.Stdout.WriteString("Compile OK")
 }
+
