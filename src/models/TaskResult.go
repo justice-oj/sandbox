@@ -9,3 +9,12 @@ type TaskResult struct {
 	Output   string
 	Expected string
 }
+
+const (
+	STATUS_AC  = iota
+	STATUS_CE
+	STATUS_RE
+	STATUS_TLE
+	STATUS_MLE
+	STATUS_WA
+)
