@@ -18,6 +18,7 @@ import (
 )
 
 func init() {
+	raven.SetDSN(config.SENTRY_DSN)
 	reexec.Register("justice_init", justice_init)
 	if reexec.Init() {
 		os.Exit(0)
@@ -82,8 +83,6 @@ func justice_init() {
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4],10, 32)
 
-	raven.SetDSN(config.SENTRY_DSN)
-
 	if err := mount_proc(new_root_path); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
@@ -109,8 +108,6 @@ func justice_init() {
 }
 
 func justice_run(input, expected string, timeout int32) {
-	raven.SetDSN(config.SENTRY_DSN)
-
 	// for c programs, compiled binary with name [Main] will be located in "/"
 	var o bytes.Buffer
 	cmd := exec.Command("/Main")
