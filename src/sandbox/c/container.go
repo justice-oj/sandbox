@@ -21,7 +21,7 @@ func init() {
 	raven.SetDSN(config.SENTRY_DSN)
 	reexec.Register("justice_init", justice_init)
 	if reexec.Init() {
-		os.Exit(0)
+		os.Exit(models.CODE_OK)
 	}
 }
 
