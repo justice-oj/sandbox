@@ -19,16 +19,16 @@ import (
 
 func init() {
 	raven.SetDSN(config.SENTRY_DSN)
-	reexec.Register("justice_init", justice_init)
+	reexec.Register("justiceInit", justiceInit)
 	if reexec.Init() {
 		os.Exit(models.CODE_OK)
 	}
 }
 
-func pivot_root(new_root string) error {
-	put_old := filepath.Join(new_root, "/.pivot_root")
+func pivotRoot(newRoot string) error {
+	putOld := filepath.Join(newRoot, "/.pivot_root")
 
-	// bind mount new_root to itself - this is a slight hack needed to satisfy requirement (2)
+	// bind mount newRoot to itself - this is a slight hack needed to satisfy requirement (2)
 	//
 	// The following restrictions apply to new_root and put_old:
 	// 1.  They must be directories.
@@ -36,61 +36,61 @@ func pivot_root(new_root string) error {
 	// 3.  put_old must be underneath new_root, that is, adding a nonzero
 	//     number of /.. to the string pointed to by put_old must yield the same directory as new_root.
 	// 4.  No other filesystem may be mounted on put_old.
-	if err := syscall.Mount(new_root, new_root, "", syscall.MS_BIND|syscall.MS_REC, ""); err != nil {
+	if err := syscall.Mount(newRoot, newRoot, "", syscall.MS_BIND|syscall.MS_REC, ""); err != nil {
 		return err
 	}
 
 	// create put_old directory
-	if err := os.MkdirAll(put_old, 0700); err != nil {
+	if err := os.MkdirAll(putOld, 0700); err != nil {
 		return err
 	}
 
-	// call pivot_root
-	if err := syscall.PivotRoot(new_root, put_old); err != nil {
+	// call pivotRoot
+	if err := syscall.PivotRoot(newRoot, putOld); err != nil {
 		return err
 	}
 
-	// Note that this also applies to the calling process: pivot_root() may
+	// Note that this also applies to the calling process: pivotRoot() may
 	// or may not affect its current working directory.  It is therefore
-	// recommended to call chdir("/") immediately after pivot_root().
+	// recommended to call chdir("/") immediately after pivotRoot().
 	if err := os.Chdir("/"); err != nil {
 		return err
 	}
 
-	// umount put_old, which now lives at /.pivot_root
-	put_old = "/.pivot_root"
-	if err := syscall.Unmount(put_old, syscall.MNT_DETACH); err != nil {
+	// umount putOld, which now lives at /.pivot_root
+	putOld = "/.pivot_root"
+	if err := syscall.Unmount(putOld, syscall.MNT_DETACH); err != nil {
 		return err
 	}
 
-	// remove put_old
-	if err := os.RemoveAll(put_old); err != nil {
+	// remove putOld
+	if err := os.RemoveAll(putOld); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func mount_proc(new_root string) error {
-	target := filepath.Join(new_root, "/proc")
+func mountProc(newRoot string) error {
+	target := filepath.Join(newRoot, "/proc")
 	os.MkdirAll(target, 0755)
 	return syscall.Mount("proc", target, "proc", uintptr(0), "")
 }
 
-func justice_init() {
-	new_root_path := os.Args[1]
+func justiceInit() {
+	newRootPath := os.Args[1]
 	input := os.Args[2]
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
-	if err := mount_proc(new_root_path); err != nil {
+	if err := mountProc(newRootPath); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
-	if err := pivot_root(new_root_path); err != nil {
+	if err := pivotRoot(newRootPath); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -104,10 +104,10 @@ func justice_init() {
 		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
-	justice_run(input, expected, int32(timeout))
+	justiceRun(input, expected, int32(timeout))
 }
 
-func justice_run(input, expected string, timeout int32) {
+func justiceRun(input, expected string, timeout int32) {
 	// for c programs, compiled binary with name [Main] will be located in "/"
 	var o bytes.Buffer
 	cmd := exec.Command("/Main")
@@ -147,7 +147,7 @@ func main() {
 	timeout := flag.String("timeout", "10000", "timeout in milliseconds")
 	flag.Parse()
 
-	cmd := reexec.Command("justice_init", *basedir, *input, *expected, *timeout)
+	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
