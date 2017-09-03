@@ -13,6 +13,8 @@ import (
 	"flag"
 	"strings"
 	"bytes"
+	"time"
+	"strconv"
 )
 
 func init() {
@@ -78,6 +80,7 @@ func justice_init() {
 	new_root_path := os.Args[1]
 	input := os.Args[2]
 	expected := os.Args[3]
+	timeout, _ := strconv.ParseInt(os.Args[4],10, 32)
 
 	raven.SetDSN(config.SENTRY_DSN)
 
@@ -102,10 +105,10 @@ func justice_init() {
 		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
-	justice_run(input, expected)
+	justice_run(input, expected, int32(timeout))
 }
 
-func justice_run(input, expected string) {
+func justice_run(input, expected string, timeout int32) {
 	raven.SetDSN(config.SENTRY_DSN)
 
 	// for c programs, compiled binary with name [Main] will be located in "/"
@@ -114,7 +117,14 @@ func justice_run(input, expected string) {
 	cmd.Stdin = strings.NewReader(input)
 	cmd.Stdout = &o
 	cmd.Stderr = os.Stderr
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
 	cmd.Env = []string{"PS1=[justice] # "}
+
+	time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
+		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	})
 
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
@@ -138,11 +148,12 @@ func main() {
 	basedir := flag.String("basedir", "/tmp", "basedir of tmp C binary")
 	input := flag.String("input", "", "test case input")
 	expected := flag.String("expected", "", "test case expected")
+	timeout := flag.String("timeout", "10000", "timeout in milliseconds")
 	flag.Parse()
 
 	raven.SetDSN(config.SENTRY_DSN)
 
-	cmd := reexec.Command("justice_init", *basedir, *input, *expected)
+	cmd := reexec.Command("justice_init", *basedir, *input, *expected, *timeout)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
