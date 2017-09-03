@@ -80,28 +80,26 @@ func justice_init() {
 	expected := os.Args[3]
 
 	raven.SetDSN(config.SENTRY_DSN)
-	task_result := &models.TaskResult{
-		Status: models.STATUS_RE,
-		Error:  "Runtime Error",
-	}
-	result, _ := json.Marshal(task_result)
 
 	if err := mount_proc(new_root_path); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(1)
+		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
 	if err := pivot_root(new_root_path); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(1)
+		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
 	if err := syscall.Sethostname([]byte("justice")); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(1)
+		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
 	justice_run(input, expected)
@@ -122,10 +120,10 @@ func justice_run(input, expected string) {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(2)
+		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
 	}
 
-	output := string(o)
+	output := o.String()
 	if output == expected {
 		result, _ := json.Marshal(models.GetAccepptedTaskResult(13,456))
 		os.Stdout.Write(result)
@@ -133,7 +131,7 @@ func justice_run(input, expected string) {
 		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))
 		os.Stdout.Write(result)
 	}
-	os.Exit(0)
+	os.Exit(models.CODE_OK)
 }
 
 func main() {
@@ -143,15 +141,10 @@ func main() {
 	flag.Parse()
 
 	raven.SetDSN(config.SENTRY_DSN)
-	task_result := &models.TaskResult{
-		Status: models.STATUS_RE,
-		Error:  "Runtime Error",
-	}
-	result, _ := json.Marshal(task_result)
 
 	cmd := reexec.Command("justice_init", *basedir, *input, *expected)
 	cmd.Stdin = os.Stdin
-	//cmd.Stdout = os.Stdout
+	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWNS |
@@ -177,14 +170,16 @@ func main() {
 	}
 
 	if err := cmd.Start(); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(1)
+		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(1)
+		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
 	}
 }
