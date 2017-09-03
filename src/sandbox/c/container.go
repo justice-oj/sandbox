@@ -130,7 +130,7 @@ func justice_run(input, expected string, timeout int32) {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
+		return
 	}
 
 	output := o.String()
@@ -141,7 +141,6 @@ func justice_run(input, expected string, timeout int32) {
 		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))
 		os.Stdout.Write(result)
 	}
-	os.Exit(models.CODE_OK)
 }
 
 func main() {
@@ -150,8 +149,6 @@ func main() {
 	expected := flag.String("expected", "", "test case expected")
 	timeout := flag.String("timeout", "10000", "timeout in milliseconds")
 	flag.Parse()
-
-	raven.SetDSN(config.SENTRY_DSN)
 
 	cmd := reexec.Command("justice_init", *basedir, *input, *expected, *timeout)
 	cmd.Stdin = os.Stdin
@@ -181,16 +178,12 @@ func main() {
 	}
 
 	if err := cmd.Start(); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
 		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
 		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
 	}
+
+	os.Exit(models.CODE_OK)
 }
