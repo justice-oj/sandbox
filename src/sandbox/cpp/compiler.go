@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	var stdout, stderr bytes.Buffer
-	cmd := exec.Command(*compiler, *filename, "-save-temps", "-std=gnu++11", "-fmax-errors=10", "-o", "Main")
+	cmd := exec.Command(*compiler, *filename, "-save-temps", "-std=gnu++11", "-fmax-errors=10", "-static", "-o", "Main")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
