@@ -14,7 +14,7 @@ func main() {
 	compiler := flag.String("compiler", "g++", "CPP compiler with abs path")
 	basedir := flag.String("basedir", "/tmp", "basedir of tmp CPP code snippet")
 	filename := flag.String("filename", "Main.cpp", "name of file to be compiled")
-	timeout := flag.Int("timeout", 10, "timeout in seconds")
+	timeout := flag.Int("timeout", 10000, "timeout in milliseconds")
 	flag.Parse()
 
 	var stdout, stderr bytes.Buffer
