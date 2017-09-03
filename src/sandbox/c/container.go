@@ -10,6 +10,9 @@ import (
 	"github.com/getsentry/raven-go"
 	"../../models"
 	"../../config"
+	"flag"
+	"strings"
+	"bytes"
 )
 
 func init() {
@@ -72,7 +75,9 @@ func mount_proc(new_root string) error {
 }
 
 func justice_init() {
-	new_root_path := "/root/busybox"
+	new_root_path := os.Args[1]
+	input := os.Args[2]
+	expected := os.Args[3]
 
 	raven.SetDSN(config.SENTRY_DSN)
 	task_result := &models.TaskResult{
@@ -99,31 +104,44 @@ func justice_init() {
 		os.Exit(1)
 	}
 
-	justice_run()
+	justice_run(input, expected)
 }
 
-func justice_run() {
+func justice_run(input, expected string) {
 	raven.SetDSN(config.SENTRY_DSN)
-	task_result := &models.TaskResult{
-		Status: models.STATUS_RE,
-		Error:  "Runtime Error",
-	}
-	result, _ := json.Marshal(task_result)
 
-	cmd := exec.Command("/bin/sh")
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
+	// for c programs, compiled binary with name [Main] will be located in "/"
+	var o bytes.Buffer
+	cmd := exec.Command("/Main")
+	cmd.Stdin = strings.NewReader(input)
+	cmd.Stdout = &o
 	cmd.Stderr = os.Stderr
 	cmd.Env = []string{"PS1=[justice] # "}
 
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(1)
+		os.Exit(2)
 	}
+
+	output := string(o)
+	if output == expected {
+		result, _ := json.Marshal(models.GetAccepptedTaskResult(13,456))
+		os.Stdout.Write(result)
+	} else {
+		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))
+		os.Stdout.Write(result)
+	}
+	os.Exit(0)
 }
 
 func main() {
+	basedir := flag.String("basedir", "/tmp", "basedir of tmp C binary")
+	input := flag.String("input", "", "test case input")
+	expected := flag.String("expected", "", "test case expected")
+	flag.Parse()
+
 	raven.SetDSN(config.SENTRY_DSN)
 	task_result := &models.TaskResult{
 		Status: models.STATUS_RE,
@@ -131,9 +149,9 @@ func main() {
 	}
 	result, _ := json.Marshal(task_result)
 
-	cmd := reexec.Command("justice_init")
+	cmd := reexec.Command("justice_init", *basedir, *input, *expected)
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
+	//cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWNS |
@@ -169,6 +187,4 @@ func main() {
 		os.Stdout.Write(result)
 		os.Exit(1)
 	}
-
-	os.Stdout.Write(result)
 }
