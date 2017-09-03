@@ -34,8 +34,8 @@ func main() {
 	if err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Stderr.WriteString(stderr.String())
-		// compiler bomb hangs for <-timeout>
-		if len(stderr.String()) == 0 {
+		// err.Error() == "signal: killed" means compiler is killed by our timer.
+		if err.Error() == "signal: killed" {
 			raven.SetDSN("http://e79ebf76a31a43d18ef7bdfa7381537e:5b21a25106584b39ac22ebf0752412db@127.0.0.1:12000/3")
 			raven.CaptureMessageAndWait(*basedir, map[string]string{"error": "CompileTimeExceeded"})
 		}

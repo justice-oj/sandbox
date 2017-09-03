@@ -81,7 +81,7 @@ func justice_init() {
 	new_root_path := os.Args[1]
 	input := os.Args[2]
 	expected := os.Args[3]
-	timeout, _ := strconv.ParseInt(os.Args[4],10, 32)
+	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
 	if err := mount_proc(new_root_path); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
@@ -132,7 +132,7 @@ func justice_run(input, expected string, timeout int32) {
 
 	output := o.String()
 	if output == expected {
-		result, _ := json.Marshal(models.GetAccepptedTaskResult(13,456))
+		result, _ := json.Marshal(models.GetAccepptedTaskResult(13, 456))
 		os.Stdout.Write(result)
 	} else {
 		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))

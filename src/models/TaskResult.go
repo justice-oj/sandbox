@@ -1,13 +1,13 @@
 package models
 
 type TaskResult struct {
-	Runtime  int64
-	Memory   int64
-	Status   int32
-	Error    string
-	Input    string
-	Output   string
-	Expected string
+	Runtime  int64   `json:"runtime,omitempty"`
+	Memory   int64   `json:"memory,omitempty"`
+	Status   int32   `json:"status"`
+	Error    string  `json:"error,omitempty"`
+	Input    string  `json:"input,omitempty"`
+	Output   string  `json:"output,omitempty"`
+	Expected string  `json:"expected,omitempty"`
 }
 
 const (
