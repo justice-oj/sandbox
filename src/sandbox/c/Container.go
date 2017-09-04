@@ -109,11 +109,11 @@ func justiceInit() {
 
 func justiceRun(input, expected string, timeout int32) {
 	// for c programs, compiled binary with name [Main] will be located in "/"
-	var o bytes.Buffer
+	var o, e bytes.Buffer
 	cmd := exec.Command("/Main")
 	cmd.Stdin = strings.NewReader(input)
 	cmd.Stdout = &o
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = &e
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
@@ -125,6 +125,12 @@ func justiceRun(input, expected string, timeout int32) {
 
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		return
+	}
+
+	if e.Len() > 0 {
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		return
