@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 	"github.com/getsentry/raven-go"
+	"../../config"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 	flag.Parse()
 
 	var stdout, stderr bytes.Buffer
-	cmd := exec.Command(*compiler, *filename, "-save-temps", "-std=gnu11",  "-fmax-errors=10", "-static", "-o", "Main")
+	cmd := exec.Command(*compiler, *filename, "-save-temps", "-std=gnu11", "-fmax-errors=10", "-static", "-o", "Main")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
@@ -36,7 +37,7 @@ func main() {
 		os.Stderr.WriteString(stderr.String())
 		// err.Error() == "signal: killed" means compiler is killed by our timer.
 		if err.Error() == "signal: killed" {
-			raven.SetDSN("http://e79ebf76a31a43d18ef7bdfa7381537e:5b21a25106584b39ac22ebf0752412db@127.0.0.1:12000/3")
+			raven.SetDSN(config.SENTRY_DSN)
 			raven.CaptureMessageAndWait(*basedir, map[string]string{"error": "CompileTimeExceeded"})
 		}
 		return
@@ -44,4 +45,3 @@ func main() {
 
 	os.Stdout.WriteString("Compile OK")
 }
-
