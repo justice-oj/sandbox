@@ -2,5 +2,5 @@ package gotest
 
 import "testing"
 
-func TestPythonAccepted(t *testing.T) {
+func Test_Python_Accepted(t *testing.T) {
 }
