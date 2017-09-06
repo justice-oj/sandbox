@@ -123,12 +123,14 @@ func justiceRun(input, expected string, timeout int32) {
 		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	})
 
+	startTime := time.Now().UnixNano() / int64(time.Millisecond)
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		return
 	}
+	endTime := time.Now().UnixNano() / int64(time.Millisecond)
 
 	if e.Len() > 0 {
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
@@ -138,7 +140,7 @@ func justiceRun(input, expected string, timeout int32) {
 
 	output := o.String()
 	if output == expected {
-		result, _ := json.Marshal(models.GetAccepptedTaskResult(13, 456))
+		result, _ := json.Marshal(models.GetAccepptedTaskResult(endTime - startTime, 456))
 		os.Stdout.Write(result)
 	} else {
 		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))

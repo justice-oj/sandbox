@@ -55,7 +55,7 @@ func run(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Running file %s ...", name)
 
 	var containerStdout bytes.Buffer
-	containerArgs := []string{"-basedir=" + baseDir, "-timeout=3000", "-input=10:10:23AM", "-expected=10:10:23"}
+	containerArgs := []string{"-basedir=" + baseDir, "-timeout=3000", "-input=10:10:23PM", "-expected=22:10:23"}
 	containerCmd := exec.Command(projectDir+"/bin/c_container", containerArgs...)
 	containerCmd.Stdout = &containerStdout
 	containerErr := containerCmd.Run()
