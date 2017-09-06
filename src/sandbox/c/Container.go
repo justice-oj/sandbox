@@ -154,8 +154,8 @@ func justiceRun(input, expected string, timeout int32) {
 
 func main() {
 	basedir := flag.String("basedir", "/tmp", "basedir of tmp C binary")
-	input := flag.String("input", "", "test case input")
-	expected := flag.String("expected", "", "test case expected")
+	input := flag.String("input", "<input>", "test case input")
+	expected := flag.String("expected", "<expected>", "test case expected")
 	timeout := flag.String("timeout", "10000", "timeout in milliseconds")
 	flag.Parse()
 

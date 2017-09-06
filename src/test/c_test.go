@@ -10,7 +10,7 @@ import (
 
 // HELPER
 // copy test source file `*.in` to tmp dir
-func copySourceFile(name string, t *testing.T) (string, string) {
+func copyCSourceFile(name string, t *testing.T) (string, string) {
 	t.Logf("Copying file %s ...", name)
 
 	absPath, _ := os.Getwd()
@@ -30,8 +30,8 @@ func copySourceFile(name string, t *testing.T) (string, string) {
 }
 
 // HELPER
-// compile source file
-func compile(name, baseDir, projectDir string, t *testing.T) (string) {
+// compileC source file
+func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Compiling file %s ...", name)
 
 	var compilerStderr bytes.Buffer
@@ -50,8 +50,8 @@ func compile(name, baseDir, projectDir string, t *testing.T) (string) {
 }
 
 // HELPER
-// run binary in our container
-func run(name, baseDir, projectDir string, t *testing.T) (string) {
+// runC binary in our container
+func runC(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Running file %s ...", name)
 
 	var containerStdout bytes.Buffer
@@ -71,15 +71,15 @@ func run(name, baseDir, projectDir string, t *testing.T) (string) {
 
 func Test_C_Accepted(t *testing.T) {
 	name := "ac.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
 	}
 
-	containerErr := run(name, baseDir, projectDir, t)
+	containerErr := runC(name, baseDir, projectDir, t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
@@ -90,8 +90,8 @@ func Test_C_Accepted(t *testing.T) {
 
 func Test_C_Compiler_Include_Leaks(t *testing.T) {
 	name := "include_leaks.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "/etc/shadow") {
 		os.RemoveAll(baseDir + "/")
@@ -103,9 +103,9 @@ func Test_C_Compiler_Include_Leaks(t *testing.T) {
 
 func Test_C_Compiler_Error(t *testing.T) {
 	name := "plain_text.c"
-	baseDir, projectDir := copySourceFile(name, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
 
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "error") {
 		os.RemoveAll(baseDir + "/")
@@ -117,8 +117,8 @@ func Test_C_Compiler_Error(t *testing.T) {
 
 func Test_C_Compiler_Bomb_0(t *testing.T) {
 	name := "compiler_bomb_0.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -130,8 +130,8 @@ func Test_C_Compiler_Bomb_0(t *testing.T) {
 
 func Test_C_Compiler_Bomb_1(t *testing.T) {
 	name := "compiler_bomb_1.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -143,8 +143,8 @@ func Test_C_Compiler_Bomb_1(t *testing.T) {
 
 func Test_C_Compiler_Bomb_2(t *testing.T) {
 	name := "compiler_bomb_2.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -156,15 +156,15 @@ func Test_C_Compiler_Bomb_2(t *testing.T) {
 
 func Test_C_Run_Infinite_Loop(t *testing.T) {
 	name := "infinite_loop.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
 	}
 
-	containerErr := run(name, baseDir, projectDir, t)
+	containerErr := runC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -176,15 +176,15 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 
 /*func Test_C_Run_Fork_Bomb(t *testing.T) {
 	name := "fork_bomb.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
 	}
 
-	containerErr := run(name, baseDir, projectDir, t)
+	containerErr := runC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -196,15 +196,15 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 
 func Test_C_Run_Command_Line(t *testing.T) {
 	name := "run_command_line.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
 	}
 
-	containerErr := run(name, baseDir, projectDir, t)
+	containerErr := runC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -216,15 +216,15 @@ func Test_C_Run_Command_Line(t *testing.T) {
 
 func Test_C_Read_File(t *testing.T) {
 	name := "read_file.c"
-	baseDir, projectDir := copySourceFile(name, t)
-	compilerStderr := compile(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
 	}
 
-	containerErr := run(name, baseDir, projectDir, t)
+	containerErr := runC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "File not found") {
 		os.RemoveAll(baseDir + "/")
