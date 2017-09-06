@@ -142,7 +142,7 @@ func justiceRun(input, expected string, timeout int32) {
 	// MB
 	memory := cmd.ProcessState.SysUsage().(*syscall.Rusage).Maxrss / 1024
 
-	output := o.String()
+	output := strings.TrimSpace(o.String())
 	if output == expected {
 		result, _ := json.Marshal(models.GetAccepptedTaskResult(endTime - startTime, memory))
 		os.Stdout.Write(result)
