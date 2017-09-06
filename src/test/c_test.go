@@ -23,6 +23,7 @@ func copyCSourceFile(name string, t *testing.T) (string, string) {
 	if cpErr != nil {
 		os.RemoveAll(baseDir + "/")
 		t.Error(cpErr.Error())
+		t.FailNow()
 	}
 
 	t.Log("Done")
@@ -43,6 +44,7 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 	if compilerErr != nil {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerErr.Error())
+		t.FailNow()
 	}
 
 	t.Log("Done")
@@ -63,6 +65,7 @@ func runC(name, baseDir, projectDir string, t *testing.T) (string) {
 	if containerErr != nil {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr.Error())
+		t.FailNow()
 	}
 
 	t.Log("Done")
@@ -77,12 +80,14 @@ func Test_C_Accepted(t *testing.T) {
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
+		t.FailNow()
 	}
 
 	containerErr := runC(name, baseDir, projectDir, t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -96,6 +101,7 @@ func Test_C_Compiler_Include_Leaks(t *testing.T) {
 	if !strings.Contains(compilerStderr, "/etc/shadow") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr + " => Compile error does not contain string `/etc/shadow`")
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -110,6 +116,7 @@ func Test_C_Compiler_Error(t *testing.T) {
 	if !strings.Contains(compilerStderr, "error") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr + " => Compile error does not contain string `error`")
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -123,6 +130,7 @@ func Test_C_Compiler_Bomb_0(t *testing.T) {
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr + " => Compile error does not contain string `signal: killed`")
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -136,6 +144,7 @@ func Test_C_Compiler_Bomb_1(t *testing.T) {
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr + " => Compile error does not contain string `signal: killed`")
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -149,6 +158,7 @@ func Test_C_Compiler_Bomb_2(t *testing.T) {
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr + " => Compile error does not contain string `signal: killed`")
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -162,6 +172,7 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
+		t.FailNow()
 	}
 
 	containerErr := runC(name, baseDir, projectDir, t)
@@ -169,6 +180,7 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -182,6 +194,7 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
+		t.FailNow()
 	}
 
 	containerErr := runC(name, baseDir, projectDir, t)
@@ -189,6 +202,7 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -202,6 +216,7 @@ func Test_C_Run_Command_Line(t *testing.T) {
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
+		t.FailNow()
 	}
 
 	containerErr := runC(name, baseDir, projectDir, t)
@@ -209,6 +224,7 @@ func Test_C_Run_Command_Line(t *testing.T) {
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
@@ -222,6 +238,7 @@ func Test_C_Read_File(t *testing.T) {
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
+		t.FailNow()
 	}
 
 	containerErr := runC(name, baseDir, projectDir, t)
@@ -229,6 +246,7 @@ func Test_C_Read_File(t *testing.T) {
 	if !strings.Contains(containerErr, "File not found") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")

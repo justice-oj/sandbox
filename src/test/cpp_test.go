@@ -23,6 +23,7 @@ func copyCppSourceFile(name string, t *testing.T) (string, string) {
 	if cpErr != nil {
 		os.RemoveAll(baseDir + "/")
 		t.Error(cpErr.Error())
+		t.FailNow()
 	}
 
 	t.Log("Done")
@@ -43,6 +44,7 @@ func compileCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 	if compilerErr != nil {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerErr.Error())
+		t.FailNow()
 	}
 
 	t.Log("Done")
@@ -63,6 +65,7 @@ func runCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 	if containerErr != nil {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr.Error())
+		t.FailNow()
 	}
 
 	t.Log("Done")
@@ -71,18 +74,20 @@ func runCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 
 func Test_Cpp_Accepted(t *testing.T) {
 	name := "ac.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
 		t.Error(compilerStderr)
+		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runCpp(name, baseDir, projectDir, t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
+		t.FailNow()
 	}
 
 	os.RemoveAll(baseDir + "/")
