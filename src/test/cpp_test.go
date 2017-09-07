@@ -154,9 +154,9 @@ func Test_Cpp_Compiler_Bomb_2(t *testing.T) {
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
-	if !strings.Contains(compilerStderr, "signal: killed") {
+	if !strings.Contains(compilerStderr, "compilation terminated due to -fmax-errors=") {
 		os.RemoveAll(baseDir + "/")
-		t.Error(compilerStderr + " => Compile error does not contain string `signal: killed`")
+		t.Error(compilerStderr + " => Compile error does not contain string `fmax-errors`")
 		t.FailNow()
 	}
 
@@ -168,9 +168,9 @@ func Test_Cpp_Compiler_Bomb_3(t *testing.T) {
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
-	if !strings.Contains(compilerStderr, "signal: killed") {
+	if !strings.Contains(compilerStderr, "template instantiation depth exceeds maximum of") {
 		os.RemoveAll(baseDir + "/")
-		t.Error(compilerStderr + " => Compile error does not contain string `signal: killed`")
+		t.Error(compilerStderr + " => Compile error does not contain string `template instantiation depth exceeds`")
 		t.FailNow()
 	}
 
@@ -202,7 +202,7 @@ func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -246,7 +246,7 @@ func Test_Cpp_Run_Command_Line(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
