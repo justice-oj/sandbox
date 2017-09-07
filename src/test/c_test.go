@@ -9,7 +9,7 @@ import (
 )
 
 // HELPER
-// copy test source file `*.in` to tmp dir
+// copy test source file `*.c` to tmp dir
 func copyCSourceFile(name string, t *testing.T) (string, string) {
 	t.Logf("Copying file %s ...", name)
 
@@ -17,7 +17,7 @@ func copyCSourceFile(name string, t *testing.T) (string, string) {
 	baseDir, projectDir := absPath+"/tmp", absPath+"/../.."
 	os.MkdirAll(baseDir, os.ModePerm)
 
-	cpCmd := exec.Command("cp", projectDir+"/src/resources/c/"+name, baseDir+"/Main.c")
+	cpCmd := exec.Command("cp", projectDir+"/src/test/resources/c/"+name, baseDir+"/Main.c")
 	cpErr := cpCmd.Run()
 
 	if cpErr != nil {
@@ -31,13 +31,12 @@ func copyCSourceFile(name string, t *testing.T) (string, string) {
 }
 
 // HELPER
-// compileC source file
+// compile C source file
 func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Compiling file %s ...", name)
 
 	var compilerStderr bytes.Buffer
-	compilerArgs := []string{"-compiler=/usr/bin/gcc", "-basedir=" + baseDir, "-timeout=3000"}
-	compilerCmd := exec.Command(projectDir+"/bin/c_compiler", compilerArgs...)
+	compilerCmd := exec.Command(projectDir+"/bin/c_compiler", "-basedir=" + baseDir)
 	compilerCmd.Stderr = &compilerStderr
 	compilerErr := compilerCmd.Run()
 
@@ -52,12 +51,12 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 }
 
 // HELPER
-// runC binary in our container
+// run C binary in our container
 func runC(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Running file %s ...", name)
 
 	var containerStdout bytes.Buffer
-	containerArgs := []string{"-basedir=" + baseDir, "-timeout=3000", "-input=10:10:23PM", "-expected=22:10:23"}
+	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23PM", "-expected=22:10:23"}
 	containerCmd := exec.Command(projectDir+"/bin/c_container", containerArgs...)
 	containerCmd.Stdout = &containerStdout
 	containerErr := containerCmd.Run()
