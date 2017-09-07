@@ -94,8 +94,8 @@ func Test_Cpp_Accepted(t *testing.T) {
 
 func Test_Cpp_Compiler_Include_Leaks(t *testing.T) {
 	name := "include_leaks.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "/etc/shadow") {
 		os.RemoveAll(baseDir + "/")
@@ -108,9 +108,9 @@ func Test_Cpp_Compiler_Include_Leaks(t *testing.T) {
 
 func Test_Cpp_Compiler_Error(t *testing.T) {
 	name := "plain_text.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
 
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "error") {
 		os.RemoveAll(baseDir + "/")
@@ -123,8 +123,8 @@ func Test_Cpp_Compiler_Error(t *testing.T) {
 
 func Test_Cpp_Compiler_Bomb_0(t *testing.T) {
 	name := "compiler_bomb_0.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -137,8 +137,8 @@ func Test_Cpp_Compiler_Bomb_0(t *testing.T) {
 
 func Test_Cpp_Compiler_Bomb_1(t *testing.T) {
 	name := "compiler_bomb_1.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -151,8 +151,8 @@ func Test_Cpp_Compiler_Bomb_1(t *testing.T) {
 
 func Test_Cpp_Compiler_Bomb_2(t *testing.T) {
 	name := "compiler_bomb_2.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -165,8 +165,8 @@ func Test_Cpp_Compiler_Bomb_2(t *testing.T) {
 
 func Test_Cpp_Compiler_Bomb_3(t *testing.T) {
 	name := "compiler_bomb_3.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -179,8 +179,8 @@ func Test_Cpp_Compiler_Bomb_3(t *testing.T) {
 
 func Test_Cpp_Compiler_Bomb_4(t *testing.T) {
 	name := "compiler_bomb_4.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(compilerStderr, "signal: killed") {
 		os.RemoveAll(baseDir + "/")
@@ -193,8 +193,8 @@ func Test_Cpp_Compiler_Bomb_4(t *testing.T) {
 
 func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
 	name := "infinite_loop.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
@@ -215,8 +215,8 @@ func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
 
 /*func Test_Cpp_Run_Fork_Bomb(t *testing.T) {
 	name := "fork_bomb.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
@@ -237,8 +237,8 @@ func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
 
 func Test_Cpp_Run_Command_Line(t *testing.T) {
 	name := "run_command_line.cpp"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
 	if len(compilerStderr) > 0 {
 		os.RemoveAll(baseDir + "/")
