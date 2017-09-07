@@ -12,10 +12,10 @@ import (
 )
 
 func main() {
-	compiler := flag.String("compiler", "g++", "CPP compiler with abs path")
+	compiler := flag.String("compiler", "/usr/bin/g++", "CPP compiler with abs path")
 	basedir := flag.String("basedir", "/tmp", "basedir of tmp CPP code snippet")
 	filename := flag.String("filename", "Main.cpp", "name of file to be compiled")
-	timeout := flag.Int("timeout", 10000, "timeout in milliseconds")
+	timeout := flag.Int("timeout", 5000, "compile timeout in milliseconds")
 	flag.Parse()
 
 	var stdout, stderr bytes.Buffer
@@ -35,7 +35,6 @@ func main() {
 	if err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Stderr.WriteString(stderr.String())
-		// err.Error() == "signal: killed" means compiler is killed by our timer.
 		if err.Error() == "signal: killed" {
 			raven.SetDSN(config.SENTRY_DSN)
 			raven.CaptureMessageAndWait(*basedir, map[string]string{"error": "CompileTimeExceeded"})

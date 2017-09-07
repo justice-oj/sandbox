@@ -140,7 +140,7 @@ func main() {
 	basedir := flag.String("basedir", "/tmp", "basedir of tmp CPP binary")
 	input := flag.String("input", "<input>", "test case input")
 	expected := flag.String("expected", "<expected>", "test case expected")
-	timeout := flag.String("timeout", "10000", "timeout in milliseconds")
+	timeout := flag.String("timeout", "2000", "timeout in milliseconds")
 	flag.Parse()
 
 	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout)
@@ -170,11 +170,7 @@ func main() {
 		},
 	}
 
-	if err := cmd.Start(); err != nil {
-		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
-	}
-
-	if err := cmd.Wait(); err != nil {
+	if err := cmd.Run(); err != nil {
 		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
 	}
 
