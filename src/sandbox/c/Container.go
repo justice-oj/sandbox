@@ -30,7 +30,7 @@ func init() {
 func pivotRoot(newRoot string) error {
 	putOld := filepath.Join(newRoot, "/.pivot_root")
 
-	// bind mount newRoot to itself - this is a slight hack needed to satisfy requirement (2)
+	// bind mount new_root to itself - this is a slight hack needed to satisfy requirement (2)
 	//
 	// The following restrictions apply to new_root and put_old:
 	// 1.  They must be directories.
@@ -59,13 +59,13 @@ func pivotRoot(newRoot string) error {
 		return err
 	}
 
-	// umount putOld, which now lives at /.pivot_root
+	// umount put_old, which now lives at /.pivot_root
 	putOld = "/.pivot_root"
 	if err := syscall.Unmount(putOld, syscall.MNT_DETACH); err != nil {
 		return err
 	}
 
-	// remove putOld
+	// remove put_old
 	if err := os.RemoveAll(putOld); err != nil {
 		return err
 	}
