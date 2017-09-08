@@ -1,5 +1,5 @@
 #include <stdlib.h>
 int main() {
-    system("ls /etc/");
+    system("reboot");
     return 0;
 }

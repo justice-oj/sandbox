@@ -10,11 +10,14 @@ import (
 	"github.com/getsentry/raven-go"
 	"../../models"
 	"../../config"
+	"../../common/cgroup"
+	"../../common/namespace"
 	"flag"
 	"strings"
 	"bytes"
 	"time"
 	"strconv"
+	"github.com/satori/go.uuid"
 )
 
 func init() {
@@ -25,57 +28,20 @@ func init() {
 	}
 }
 
-func pivotRoot(newRoot string) error {
-	putOld := filepath.Join(newRoot, "/.pivot_root")
-
-	if err := syscall.Mount(newRoot, newRoot, "", syscall.MS_BIND|syscall.MS_REC, ""); err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(putOld, 0700); err != nil {
-		return err
-	}
-
-	if err := syscall.PivotRoot(newRoot, putOld); err != nil {
-		return err
-	}
-
-	if err := os.Chdir("/"); err != nil {
-		return err
-	}
-
-	putOld = "/.pivot_root"
-	if err := syscall.Unmount(putOld, syscall.MNT_DETACH); err != nil {
-		return err
-	}
-
-	if err := os.RemoveAll(putOld); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func mountProc(newRoot string) error {
-	target := filepath.Join(newRoot, "/proc")
-	os.MkdirAll(target, 0755)
-	return syscall.Mount("proc", target, "proc", uintptr(0), "")
-}
-
 func justiceInit() {
 	newRootPath := os.Args[1]
 	input := os.Args[2]
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
-	if err := mountProc(newRootPath); err != nil {
+	if err := &namespace.MountProc(newRootPath); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
-	if err := pivotRoot(newRootPath); err != nil {
+	if err := &namespace.PivotRoot(newRootPath); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -141,7 +107,28 @@ func main() {
 	input := flag.String("input", "<input>", "test case input")
 	expected := flag.String("expected", "<expected>", "test case expected")
 	timeout := flag.String("timeout", "2000", "timeout in milliseconds")
+	memory := flag.String("memory", "64", "memory limitation in MB")
 	flag.Parse()
+
+	pid, containerID := os.Getpid(), uuid.NewV4().String()
+	cgCPUPath := filepath.Join("/sys/fs/cgroup/cpu/", containerID)
+	cgMemoryPath := filepath.Join("/sys/fs/cgroup/memory/", containerID)
+
+	// CPU
+	if err := &cgroup.CPUInit(string(pid), cgCPUPath); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		return
+	}
+
+	// MEMORY
+	if err := &cgroup.MemoryInit(string(pid), cgMemoryPath, *memory); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		return
+	}
 
 	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout)
 	cmd.Stdin = os.Stdin
@@ -172,6 +159,14 @@ func main() {
 
 	if err := cmd.Run(); err != nil {
 		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
+	}
+
+	if err := &cgroup.Cleanup(cgCPUPath); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
+	}
+
+	if err := &cgroup.Cleanup(cgMemoryPath); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
 	}
 
 	os.Exit(models.CODE_OK)

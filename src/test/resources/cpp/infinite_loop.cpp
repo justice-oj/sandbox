@@ -1,8 +1,5 @@
-#include <stdio.h>
-
-int main() {
-    while (1) {
-        printf("Infinite Loop\n");
-    }
+int main(void) {
+    int i = 0;
+    for(;;) i++;
     return 0;
 }

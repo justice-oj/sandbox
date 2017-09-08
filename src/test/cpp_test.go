@@ -213,7 +213,7 @@ func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
-/*func Test_Cpp_Run_Fork_Bomb(t *testing.T) {
+func Test_Cpp_Run_Fork_Bomb(t *testing.T) {
 	name := "fork_bomb.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	compilerStderr := compileCpp(name, baseDir, projectDir, t)
@@ -224,7 +224,7 @@ func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runCpp(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -233,7 +233,7 @@ func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
 	}
 
 	os.RemoveAll(baseDir + "/")
-}*/
+}
 
 func Test_Cpp_Run_Command_Line(t *testing.T) {
 	name := "run_command_line.cpp"

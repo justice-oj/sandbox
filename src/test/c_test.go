@@ -185,7 +185,7 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
-/*func Test_C_Run_Fork_Bomb(t *testing.T) {
+func Test_C_Run_Fork_Bomb(t *testing.T) {
 	name := "fork_bomb.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
 	compilerStderr := compileC(name, baseDir, projectDir, t)
@@ -205,7 +205,7 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 	}
 
 	os.RemoveAll(baseDir + "/")
-}*/
+}
 
 func Test_C_Run_Command_Line(t *testing.T) {
 	name := "run_command_line.c"
@@ -243,6 +243,28 @@ func Test_C_Read_File(t *testing.T) {
 	containerErr := runC(name, baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "File not found") {
+		os.RemoveAll(baseDir + "/")
+		t.Error(containerErr)
+		t.FailNow()
+	}
+
+	os.RemoveAll(baseDir + "/")
+}
+
+func Test_C_Memory_Allocation(t *testing.T) {
+	name := "memory_allocation.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+
+	if len(compilerStderr) > 0 {
+		os.RemoveAll(baseDir + "/")
+		t.Error(compilerStderr)
+		t.FailNow()
+	}
+
+	containerErr := runC(name, baseDir, projectDir, t)
+
+	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
 		t.FailNow()
