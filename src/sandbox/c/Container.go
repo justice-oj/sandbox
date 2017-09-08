@@ -168,7 +168,7 @@ func main() {
 	cgCPUPath := filepath.Join("/sys/fs/cgroup/cpu/", containerID)
 	os.Mkdir(cgCPUPath, 0755)
 	// add current pid to cgroup cpu
-	ioutil.WriteFile(filepath.Join(cgCPUPath, "/tasks"), []byte(pid), 0755)
+	ioutil.WriteFile(filepath.Join(cgCPUPath, "/tasks"), []byte(string(pid)), 0755)
 	// cpu usage max up to 2%
 	ioutil.WriteFile(filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"), []byte("2000"), 0755)
 
@@ -176,7 +176,7 @@ func main() {
 	cgMemoryPath := filepath.Join("/sys/fs/cgroup/memory/", containerID)
 	os.Mkdir(cgMemoryPath, 0755)
 	// add current pid to cgroup memory
-	ioutil.WriteFile(filepath.Join(cgMemoryPath, "/tasks"), []byte(pid), 0755)
+	ioutil.WriteFile(filepath.Join(cgMemoryPath, "/tasks"), []byte(string(pid)), 0755)
 	// set memory usage limitation
 	ioutil.WriteFile(filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"), []byte(*memory+"m"), 0755)
 
