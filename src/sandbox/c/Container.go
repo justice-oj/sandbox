@@ -154,6 +154,49 @@ func justiceRun(input, expected string, timeout int32) {
 	}
 }
 
+func cgroupCPUInit(pid, cgCPUPath string) error {
+	// add sub cgroup system
+	if err := os.Mkdir(cgCPUPath, 0755); err != nil {
+		return err
+	}
+
+	// add current pid to cgroup cpu
+	if err := ioutil.WriteFile(filepath.Join(cgCPUPath, "/tasks"), []byte(pid), 0755); err != nil {
+		return err
+	}
+
+	// cpu usage max up to 2%
+	if err := ioutil.WriteFile(filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"), []byte("2000"), 0755); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func cgroupMemoryInit(pid, cgMemoryPath, memory string) error {
+	// add sub cgroup system
+	if err := os.Mkdir(cgMemoryPath, 0755); err != nil {
+		return err
+	}
+
+	// add current pid to cgroup memory
+	if err := ioutil.WriteFile(filepath.Join(cgMemoryPath, "/tasks"), []byte(string(pid)), 0755); err != nil {
+		return err
+	}
+
+	// set memory usage limitation
+	if err := ioutil.WriteFile(filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"), []byte(memory+"m"), 0755); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func cgroupCleanup(path string) error {
+	cmd := exec.Command("rmdir", path)
+	return cmd.Run()
+}
+
 func main() {
 	basedir := flag.String("basedir", "/tmp", "basedir of tmp C binary")
 	input := flag.String("input", "<input>", "test case input")
@@ -163,22 +206,24 @@ func main() {
 	flag.Parse()
 
 	pid, containerID := os.Getpid(), uuid.NewV4().String()
+	cgCPUPath := filepath.Join("/sys/fs/cgroup/cpu/", containerID)
+	cgMemoryPath := filepath.Join("/sys/fs/cgroup/memory/", containerID)
 
 	// CPU
-	cgCPUPath := filepath.Join("/sys/fs/cgroup/cpu/", containerID)
-	os.Mkdir(cgCPUPath, 0755)
-	// add current pid to cgroup cpu
-	ioutil.WriteFile(filepath.Join(cgCPUPath, "/tasks"), []byte(string(pid)), 0755)
-	// cpu usage max up to 2%
-	ioutil.WriteFile(filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"), []byte("2000"), 0755)
+	if err := cgroupCPUInit(string(pid), cgCPUPath); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		return
+	}
 
 	// MEMORY
-	cgMemoryPath := filepath.Join("/sys/fs/cgroup/memory/", containerID)
-	os.Mkdir(cgMemoryPath, 0755)
-	// add current pid to cgroup memory
-	ioutil.WriteFile(filepath.Join(cgMemoryPath, "/tasks"), []byte(string(pid)), 0755)
-	// set memory usage limitation
-	ioutil.WriteFile(filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"), []byte(*memory+"m"), 0755)
+	if err := cgroupMemoryInit(string(pid), cgMemoryPath, *memory); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		return
+	}
 
 	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout)
 	cmd.Stdin = os.Stdin
@@ -213,6 +258,13 @@ func main() {
 		os.Stdout.Write(result)
 	}
 
-	// TODO: remove cgCPUPath, cgMemoryPath
+	if err := cgroupCleanup(cgCPUPath); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
+	}
+
+	if err := cgroupCleanup(cgMemoryPath); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
+	}
+
 	os.Exit(models.CODE_OK)
 }
