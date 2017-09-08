@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"syscall"
 	"github.com/docker/docker/pkg/reexec"
+	"github.com/satori/go.uuid"
 	"path/filepath"
 	"github.com/getsentry/raven-go"
 	"../../models"
@@ -15,6 +16,7 @@ import (
 	"bytes"
 	"time"
 	"strconv"
+	"io/ioutil"
 )
 
 func init() {
@@ -144,7 +146,7 @@ func justiceRun(input, expected string, timeout int32) {
 
 	output := strings.TrimSpace(o.String())
 	if output == expected {
-		result, _ := json.Marshal(models.GetAccepptedTaskResult(endTime - startTime, memory))
+		result, _ := json.Marshal(models.GetAccepptedTaskResult(endTime-startTime, memory))
 		os.Stdout.Write(result)
 	} else {
 		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))
@@ -157,7 +159,26 @@ func main() {
 	input := flag.String("input", "<input>", "test case input")
 	expected := flag.String("expected", "<expected>", "test case expected")
 	timeout := flag.String("timeout", "2000", "timeout in milliseconds")
+	memory := flag.String("memory", "64", "memory limitation in MB")
 	flag.Parse()
+
+	pid, containerID := os.Getpid(), uuid.NewV4().String()
+
+	// CPU
+	cgCPUPath := filepath.Join("/sys/fs/cgroup/cpu/", containerID)
+	os.Mkdir(cgCPUPath, 0755)
+	// add current pid to cgroup cpu
+	ioutil.WriteFile(filepath.Join(cgCPUPath, "/tasks"), []byte(pid), 0755)
+	// cpu usage max up to 2%
+	ioutil.WriteFile(filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"), []byte("2000"), 0755)
+
+	// MEMORY
+	cgMemoryPath := filepath.Join("/sys/fs/cgroup/memory/", containerID)
+	os.Mkdir(cgMemoryPath, 0755)
+	// add current pid to cgroup memory
+	ioutil.WriteFile(filepath.Join(cgMemoryPath, "/tasks"), []byte(pid), 0755)
+	// set memory usage limitation
+	ioutil.WriteFile(filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"), []byte(*memory+"m"), 0755)
 
 	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout)
 	cmd.Stdin = os.Stdin
@@ -187,8 +208,11 @@ func main() {
 	}
 
 	if err := cmd.Run(); err != nil {
-		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
 	}
 
+	// TODO: remove cgCPUPath, cgMemoryPath
 	os.Exit(models.CODE_OK)
 }
