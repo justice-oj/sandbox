@@ -7,7 +7,6 @@ import (
 	"syscall"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/satori/go.uuid"
-	"path/filepath"
 	"github.com/getsentry/raven-go"
 	"../../models"
 	"../../config"
@@ -34,21 +33,7 @@ func justiceInit() {
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
-	if err := &namespace.MountProc(newRootPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
-	}
-
-	if err := &namespace.PivotRoot(newRootPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
-	}
-
-	if err := syscall.Sethostname([]byte("justice")); err != nil {
+	if err := &namespace.InitNamespace(newRootPath); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -112,19 +97,8 @@ func main() {
 	flag.Parse()
 
 	pid, containerID := os.Getpid(), uuid.NewV4().String()
-	cgCPUPath := filepath.Join("/sys/fs/cgroup/cpu/", containerID)
-	cgMemoryPath := filepath.Join("/sys/fs/cgroup/memory/", containerID)
 
-	// CPU
-	if err := &cgroup.CPUInit(string(pid), cgCPUPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		return
-	}
-
-	// MEMORY
-	if err := &cgroup.MemoryInit(string(pid), cgMemoryPath, *memory); err != nil {
+	if err := &cgroup.InitCGroup(string(pid), containerID, *memory); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -164,11 +138,7 @@ func main() {
 		os.Stdout.Write(result)
 	}
 
-	if err := &cgroup.Cleanup(cgCPUPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
-	}
-
-	if err := &cgroup.Cleanup(cgMemoryPath); err != nil {
+	if err := &cgroup.Cleanup(containerID); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
 	}
 

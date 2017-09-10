@@ -6,7 +6,23 @@ import (
 	"os"
 )
 
-func PivotRoot(newRoot string) error {
+func InitNamespace(newRoot string) error {
+	if err := pivotRoot(newRoot); err != nil {
+		return err
+	}
+
+	if err := mountProc(newRoot); err != nil {
+		return err
+	}
+
+	if err := syscall.Sethostname([]byte("justice")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func pivotRoot(newRoot string) error {
 	putOld := filepath.Join(newRoot, "/.pivot_root")
 
 	// bind mount new_root to itself - this is a slight hack needed to satisfy requirement (2)
@@ -52,7 +68,7 @@ func PivotRoot(newRoot string) error {
 	return nil
 }
 
-func MountProc(newRoot string) error {
+func mountProc(newRoot string) error {
 	target := filepath.Join(newRoot, "/proc")
 	os.MkdirAll(target, 0755)
 	return syscall.Mount("proc", target, "proc", uintptr(0), "")

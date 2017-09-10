@@ -7,7 +7,26 @@ import (
 	"os/exec"
 )
 
-func CPUInit(pid, cgCPUPath string) error {
+const (
+	cgCPUPathPrefix    = "/sys/fs/cgroup/cpu/"
+	cgMemoryPathPrefix = "/sys/fs/cgroup/memory/"
+)
+
+func InitCGroup(pid, containerID, memory string) error {
+	if err := cpuCGroup(pid, containerID); err != nil {
+		return err
+	}
+
+	if err := memoryCGroup(pid, containerID, memory); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func cpuCGroup(pid, containerID string) error {
+	cgCPUPath := filepath.Join(cgCPUPathPrefix, containerID)
+
 	// add sub cgroup system
 	if err := os.Mkdir(cgCPUPath, 0755); err != nil {
 		return err
@@ -26,7 +45,9 @@ func CPUInit(pid, cgCPUPath string) error {
 	return nil
 }
 
-func MemoryInit(pid, cgMemoryPath, memory string) error {
+func memoryCGroup(pid, containerID, memory string) error {
+	cgMemoryPath := filepath.Join(cgMemoryPathPrefix, containerID)
+
 	// add sub cgroup system
 	if err := os.Mkdir(cgMemoryPath, 0755); err != nil {
 		return err
@@ -45,7 +66,16 @@ func MemoryInit(pid, cgMemoryPath, memory string) error {
 	return nil
 }
 
-func Cleanup(path string) error {
-	cmd := exec.Command("rmdir", path)
-	return cmd.Run()
+func Cleanup(containerID string) error {
+	cleanCPUCommand := exec.Command("rmdir", cgCPUPathPrefix + containerID)
+	if cpuErr := cleanCPUCommand.Run(); cpuErr != nil {
+		return cpuErr
+	}
+
+	cleanMemoryCommand := exec.Command("rmdir", cgMemoryPathPrefix + containerID)
+	if cpuErr := cleanMemoryCommand.Run(); cpuErr != nil {
+		return cpuErr
+	}
+
+	return nil
 }
