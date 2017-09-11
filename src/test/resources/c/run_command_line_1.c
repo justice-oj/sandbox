@@ -1,6 +1,5 @@
 #include <stdlib.h>
-
 int main() {
-    system("reboot");
+    system("shutdown -h now");
     return 0;
 }

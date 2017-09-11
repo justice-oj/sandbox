@@ -3,19 +3,15 @@ package main
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"syscall"
 	"github.com/docker/docker/pkg/reexec"
-	"path/filepath"
 	"github.com/getsentry/raven-go"
 	"../../models"
 	"../../config"
 	"../../common/cgroup"
 	"../../common/namespace"
+	"../../common/container"
 	"flag"
-	"strings"
-	"bytes"
-	"time"
 	"strconv"
 	"github.com/satori/go.uuid"
 )
@@ -34,72 +30,14 @@ func justiceInit() {
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
-	if err := &namespace.MountProc(newRootPath); err != nil {
+	if err := &namespace.InitNamespace(newRootPath); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
 	}
 
-	if err := &namespace.PivotRoot(newRootPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
-	}
-
-	if err := syscall.Sethostname([]byte("justice")); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
-	}
-
-	justiceRun(input, expected, int32(timeout))
-}
-
-func justiceRun(input, expected string, timeout int32) {
-	var o, e bytes.Buffer
-	cmd := exec.Command("/Main")
-	cmd.Stdin = strings.NewReader(input)
-	cmd.Stdout = &o
-	cmd.Stderr = &e
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
-	cmd.Env = []string{"PS1=[justice] # "}
-
-	time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
-		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-	})
-
-	// ms
-	startTime := time.Now().UnixNano() / int64(time.Millisecond)
-	if err := cmd.Run(); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		return
-	}
-	endTime := time.Now().UnixNano() / int64(time.Millisecond)
-
-	if e.Len() > 0 {
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		return
-	}
-
-	// MB
-	memory := cmd.ProcessState.SysUsage().(*syscall.Rusage).Maxrss / 1024
-
-	output := strings.TrimSpace(o.String())
-	if output == expected {
-		result, _ := json.Marshal(models.GetAccepptedTaskResult(endTime - startTime, memory))
-		os.Stdout.Write(result)
-	} else {
-		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))
-		os.Stdout.Write(result)
-	}
+	container.Run(int32(timeout), input, expected, "/Main")
 }
 
 func main() {
@@ -111,19 +49,8 @@ func main() {
 	flag.Parse()
 
 	pid, containerID := os.Getpid(), uuid.NewV4().String()
-	cgCPUPath := filepath.Join("/sys/fs/cgroup/cpu/", containerID)
-	cgMemoryPath := filepath.Join("/sys/fs/cgroup/memory/", containerID)
 
-	// CPU
-	if err := &cgroup.CPUInit(string(pid), cgCPUPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		return
-	}
-
-	// MEMORY
-	if err := &cgroup.MemoryInit(string(pid), cgMemoryPath, *memory); err != nil {
+	if err := &cgroup.InitCGroup(string(pid), containerID, *memory); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -158,14 +85,12 @@ func main() {
 	}
 
 	if err := cmd.Run(); err != nil {
-		os.Exit(models.CODE_CONTAINER_RUNTIME_ERROR)
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
 	}
 
-	if err := &cgroup.Cleanup(cgCPUPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
-	}
-
-	if err := &cgroup.Cleanup(cgMemoryPath); err != nil {
+	if err := &cgroup.Cleanup(containerID); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
 	}
 

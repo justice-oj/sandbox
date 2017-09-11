@@ -185,6 +185,28 @@ func Test_C_Run_Infinite_Loop(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
+func Test_C_Memory_Allocation(t *testing.T) {
+	name := "memory_allocation.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+
+	if len(compilerStderr) > 0 {
+		os.RemoveAll(baseDir + "/")
+		t.Error(compilerStderr)
+		t.FailNow()
+	}
+
+	containerErr := runC(name, baseDir, projectDir, t)
+
+	if !strings.Contains(containerErr, "\"status\":5") {
+		os.RemoveAll(baseDir + "/")
+		t.Error(containerErr)
+		t.FailNow()
+	}
+
+	os.RemoveAll(baseDir + "/")
+}
+
 func Test_C_Run_Fork_Bomb(t *testing.T) {
 	name := "fork_bomb.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
@@ -207,8 +229,8 @@ func Test_C_Run_Fork_Bomb(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
-func Test_C_Run_Command_Line(t *testing.T) {
-	name := "run_command_line.c"
+func Test_C_Run_Command_Line_0(t *testing.T) {
+	name := "run_command_line_0.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
 	compilerStderr := compileC(name, baseDir, projectDir, t)
 
@@ -229,8 +251,8 @@ func Test_C_Run_Command_Line(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
-func Test_C_Read_File(t *testing.T) {
-	name := "read_file.c"
+func Test_C_Run_Command_Line_1(t *testing.T) {
+	name := "run_command_line_1.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
 	compilerStderr := compileC(name, baseDir, projectDir, t)
 
@@ -242,7 +264,7 @@ func Test_C_Read_File(t *testing.T) {
 
 	containerErr := runC(name, baseDir, projectDir, t)
 
-	if !strings.Contains(containerErr, "File not found") {
+	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
 		t.FailNow()
@@ -251,8 +273,8 @@ func Test_C_Read_File(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
-func Test_C_Memory_Allocation(t *testing.T) {
-	name := "memory_allocation.c"
+func Test_C_Run_Syscall_0(t *testing.T) {
+	name := "syscall_0.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
 	compilerStderr := compileC(name, baseDir, projectDir, t)
 
