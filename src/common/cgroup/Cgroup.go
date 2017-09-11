@@ -62,7 +62,7 @@ func memoryCGroup(pid, containerID, memory string) error {
 	}
 
 	// set memory usage limitation
-	quotaCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"))
+	quotaCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.memsw.limit_in_bytes"))
 	if err := quotaCmd.Run(); err != nil {
 		return err
 	}
