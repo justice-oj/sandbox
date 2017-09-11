@@ -71,7 +71,7 @@ func runCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 	return containerStdout.String()
 }
 
-func Test_Cpp_Accepted(t *testing.T) {
+func Test_Cpp_AC(t *testing.T) {
 	name := "ac.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	compilerStderr := compileCpp(name, baseDir, projectDir, t)
@@ -86,35 +86,6 @@ func Test_Cpp_Accepted(t *testing.T) {
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
-		t.FailNow()
-	}
-
-	os.RemoveAll(baseDir + "/")
-}
-
-func Test_Cpp_Compiler_Include_Leaks(t *testing.T) {
-	name := "include_leaks.cpp"
-	baseDir, projectDir := copyCppSourceFile(name, t)
-	compilerStderr := compileCpp(name, baseDir, projectDir, t)
-
-	if !strings.Contains(compilerStderr, "/etc/shadow") {
-		os.RemoveAll(baseDir + "/")
-		t.Error(compilerStderr + " => Compile error does not contain string `/etc/shadow`")
-		t.FailNow()
-	}
-
-	os.RemoveAll(baseDir + "/")
-}
-
-func Test_Cpp_Compiler_Error(t *testing.T) {
-	name := "plain_text.cpp"
-	baseDir, projectDir := copyCppSourceFile(name, t)
-
-	compilerStderr := compileCpp(name, baseDir, projectDir, t)
-
-	if !strings.Contains(compilerStderr, "error") {
-		os.RemoveAll(baseDir + "/")
-		t.Error(compilerStderr + " => Compile error does not contain string `error`")
 		t.FailNow()
 	}
 
@@ -191,29 +162,7 @@ func Test_Cpp_Compiler_Bomb_4(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
-func Test_Cpp_Run_Infinite_Loop(t *testing.T) {
-	name := "infinite_loop.cpp"
-	baseDir, projectDir := copyCppSourceFile(name, t)
-	compilerStderr := compileCpp(name, baseDir, projectDir, t)
-
-	if len(compilerStderr) > 0 {
-		os.RemoveAll(baseDir + "/")
-		t.Error(compilerStderr)
-		t.FailNow()
-	}
-
-	containerErr := runCpp(name, baseDir, projectDir, t)
-
-	if !strings.Contains(containerErr, "Runtime Error") {
-		os.RemoveAll(baseDir + "/")
-		t.Error(containerErr)
-		t.FailNow()
-	}
-
-	os.RemoveAll(baseDir + "/")
-}
-
-func Test_Cpp_Run_Fork_Bomb(t *testing.T) {
+func Test_Cpp_Fork_Bomb(t *testing.T) {
 	name := "fork_bomb.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	compilerStderr := compileCpp(name, baseDir, projectDir, t)
@@ -235,8 +184,59 @@ func Test_Cpp_Run_Fork_Bomb(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
-func Test_Cpp_Run_Command_Line(t *testing.T) {
-	name := "run_command_line.cpp"
+func Test_Cpp_Include_Leaks(t *testing.T) {
+	name := "include_leaks.cpp"
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
+
+	if !strings.Contains(compilerStderr, "/etc/shadow") {
+		os.RemoveAll(baseDir + "/")
+		t.Error(compilerStderr + " => Compile error does not contain string `/etc/shadow`")
+		t.FailNow()
+	}
+
+	os.RemoveAll(baseDir + "/")
+}
+
+func Test_Cpp_Infinite_Loop(t *testing.T) {
+	name := "infinite_loop.cpp"
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
+
+	if len(compilerStderr) > 0 {
+		os.RemoveAll(baseDir + "/")
+		t.Error(compilerStderr)
+		t.FailNow()
+	}
+
+	containerErr := runCpp(name, baseDir, projectDir, t)
+
+	if !strings.Contains(containerErr, "Runtime Error") {
+		os.RemoveAll(baseDir + "/")
+		t.Error(containerErr)
+		t.FailNow()
+	}
+
+	os.RemoveAll(baseDir + "/")
+}
+
+func Test_Cpp_Plain_Text(t *testing.T) {
+	name := "plain_text.cpp"
+	baseDir, projectDir := copyCppSourceFile(name, t)
+
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
+
+	if !strings.Contains(compilerStderr, "error") {
+		os.RemoveAll(baseDir + "/")
+		t.Error(compilerStderr + " => Compile error does not contain string `error`")
+		t.FailNow()
+	}
+
+	os.RemoveAll(baseDir + "/")
+}
+
+func Test_Cpp_Run_Command_Line_0(t *testing.T) {
+	name := "run_command_line_0.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	compilerStderr := compileCpp(name, baseDir, projectDir, t)
 
