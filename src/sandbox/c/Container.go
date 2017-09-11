@@ -31,6 +31,8 @@ func justiceInit() {
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
 	if err := namespace.InitNamespace(newRootPath); err != nil {
+		// TODO: remove debug
+		os.Stdout.WriteString("namespace.InitNamespace")
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -51,6 +53,8 @@ func main() {
 	pid, containerID := os.Getpid(), uuid.NewV4().String()
 
 	if err := cgroup.InitCGroup(string(pid), containerID, *memory); err != nil {
+		// TODO: remove debug
+		os.Stdout.WriteString("cgroup.InitCGroup")
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -85,6 +89,8 @@ func main() {
 	}
 
 	if err := cmd.Run(); err != nil {
+		// TODO: remove debug
+		os.Stdout.WriteString("reexec.Command")
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)

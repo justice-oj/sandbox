@@ -52,8 +52,8 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 
 // HELPER
 // run C binary in our container
-func runC(name, baseDir, projectDir string, t *testing.T) (string) {
-	t.Logf("Running file %s ...", name)
+func runC(baseDir, projectDir string, t *testing.T) (string) {
+	t.Log("Running binary /Main ...")
 
 	var containerStdout bytes.Buffer
 	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23PM", "-expected=22:10:23"}
@@ -82,7 +82,7 @@ func Test_C_AC(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
@@ -145,7 +145,7 @@ func Test_C_Fork_Bomb(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -181,7 +181,7 @@ func Test_C_Infinite_Loop(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -203,7 +203,7 @@ func Test_C_Memory_Allocation(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -240,7 +240,7 @@ func Test_C_Run_Command_Line_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -262,7 +262,7 @@ func Test_C_Run_Command_Line_1(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -284,7 +284,7 @@ func Test_C_Syscall_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(name, baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
