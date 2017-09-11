@@ -2,7 +2,6 @@ package cgroup
 
 import (
 	"path/filepath"
-	"os"
 	"os/exec"
 )
 
@@ -27,7 +26,8 @@ func cpuCGroup(pid, containerID string) error {
 	cgCPUPath := filepath.Join(cgCPUPathPrefix, containerID)
 
 	// add sub cgroup system
-	if err := os.Mkdir(cgCPUPath, 0755); err != nil {
+	mkdirCmd := exec.Command("/usr/bin/mkdir", cgCPUPath)
+	if err := mkdirCmd.Run(); err != nil {
 		return err
 	}
 
@@ -50,7 +50,8 @@ func memoryCGroup(pid, containerID, memory string) error {
 	cgMemoryPath := filepath.Join(cgMemoryPathPrefix, containerID)
 
 	// add sub cgroup system
-	if err := os.Mkdir(cgMemoryPath, 0755); err != nil {
+	mkdirCmd := exec.Command("/usr/bin/mkdir", cgMemoryPath)
+	if err := mkdirCmd.Run(); err != nil {
 		return err
 	}
 

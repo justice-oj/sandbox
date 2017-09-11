@@ -11,25 +11,15 @@ import (
 	"encoding/json"
 	"../../models"
 	"../../common/namespace"
-	"../../common/cgroup"
 )
 
-func Run(timeout int32, memory, pid, containerID, basedir, input, expected, cmdName string, cmdArgs ...string) {
+func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...string) {
 	// Init Namespace
 	if err := namespace.InitNamespace(basedir); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
-	}
-
-	// Init CGroup
-	if err := cgroup.InitCGroup(string(pid), containerID, memory); err != nil {
-		cgroup.Cleanup(containerID)
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		return
 	}
 
 	var o, e bytes.Buffer
@@ -71,6 +61,4 @@ func Run(timeout int32, memory, pid, containerID, basedir, input, expected, cmdN
 		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))
 		os.Stdout.Write(result)
 	}
-
-	cgroup.Cleanup(containerID)
 }

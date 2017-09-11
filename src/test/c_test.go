@@ -36,7 +36,7 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Compiling file %s ...", name)
 
 	var compilerStderr bytes.Buffer
-	compilerCmd := exec.Command(projectDir+"/bin/c_compiler", "-basedir=" + baseDir)
+	compilerCmd := exec.Command(projectDir+"/bin/c_compiler", "-basedir="+baseDir)
 	compilerCmd.Stderr = &compilerStderr
 	compilerErr := compilerCmd.Run()
 

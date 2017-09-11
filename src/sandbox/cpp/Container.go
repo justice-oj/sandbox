@@ -8,6 +8,7 @@ import (
 	"github.com/getsentry/raven-go"
 	"../../models"
 	"../../config"
+	"../../common/cgroup"
 	"../../common/container"
 	"flag"
 	"strconv"
@@ -27,11 +28,8 @@ func justiceInit() {
 	input := os.Args[2]
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
-	memory := os.Args[5]
-	pid := os.Args[6]
-	containerID := os.Args[7]
 
-	container.Run(int32(timeout), memory, pid, containerID, basedir, input, expected, "/Main")
+	container.Run(int32(timeout), basedir, input, expected, "/Main")
 }
 
 func main() {
@@ -42,8 +40,18 @@ func main() {
 	memory := flag.String("memory", "64", "memory limitation in MB")
 	flag.Parse()
 
-	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout, *memory,
-		strconv.Itoa(os.Getpid()), uuid.NewV4().String())
+	pid, containerID := strconv.Itoa(os.Getpid()), uuid.NewV4().String()
+
+	// Init CGroup
+	if err := cgroup.InitCGroup(string(pid), containerID, *memory); err != nil {
+		cgroup.Cleanup(containerID)
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		return
+	}
+
+	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout, *memory)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -75,5 +83,8 @@ func main() {
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 	}
+
+	cgroup.Cleanup(containerID)
+
 	os.Exit(models.CODE_OK)
 }
