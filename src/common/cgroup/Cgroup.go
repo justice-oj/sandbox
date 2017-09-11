@@ -1,7 +1,6 @@
 package cgroup
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"os"
 	"os/exec"
@@ -33,12 +32,14 @@ func cpuCGroup(pid, containerID string) error {
 	}
 
 	// add current pid to cgroup cpu
-	if err := ioutil.WriteFile(filepath.Join(cgCPUPath, "/tasks"), []byte(pid), 0755); err != nil {
+	taskCmd := exec.Command("/usr/bin/echo", pid, ">", filepath.Join(cgCPUPath, "/tasks"))
+	if err := taskCmd.Run(); err != nil {
 		return err
 	}
 
 	// cpu usage max up to 2%
-	if err := ioutil.WriteFile(filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"), []byte("2000"), 0755); err != nil {
+	quotaCmd := exec.Command("/usr/bin/echo", "2000", ">", filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"))
+	if err := quotaCmd.Run(); err != nil {
 		return err
 	}
 
@@ -54,12 +55,14 @@ func memoryCGroup(pid, containerID, memory string) error {
 	}
 
 	// add current pid to cgroup memory
-	if err := ioutil.WriteFile(filepath.Join(cgMemoryPath, "/tasks"), []byte(string(pid)), 0755); err != nil {
+	taskCmd := exec.Command("/usr/bin/echo", pid, ">", filepath.Join(cgMemoryPath, "/tasks"))
+	if err := taskCmd.Run(); err != nil {
 		return err
 	}
 
 	// set memory usage limitation
-	if err := ioutil.WriteFile(filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"), []byte(memory+"m"), 0755); err != nil {
+	quotaCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"))
+	if err := quotaCmd.Run(); err != nil {
 		return err
 	}
 

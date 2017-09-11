@@ -30,8 +30,6 @@ func Run(timeout int32, input, expected, cmdName string, cmdArgs ...string) {
 	// ms
 	startTime := time.Now().UnixNano() / int64(time.Millisecond)
 	if err := cmd.Run(); err != nil {
-		// TODO: remove debug
-		os.Stdout.WriteString("container.Run")
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -40,8 +38,6 @@ func Run(timeout int32, input, expected, cmdName string, cmdArgs ...string) {
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
 
 	if e.Len() > 0 {
-		// TODO: remove debug
-		os.Stdout.WriteString("e.Len() > 0: " + e.String())
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		return
