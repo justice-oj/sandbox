@@ -8,8 +8,6 @@ import (
 	"github.com/getsentry/raven-go"
 	"../../models"
 	"../../config"
-	"../../common/cgroup"
-	"../../common/namespace"
 	"../../common/container"
 	"flag"
 	"strconv"
@@ -25,19 +23,15 @@ func init() {
 }
 
 func justiceInit() {
-	newRootPath := os.Args[1]
+	basedir := os.Args[1]
 	input := os.Args[2]
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
+	memory := os.Args[5]
+	pid := os.Args[6]
+	containerID := os.Args[7]
 
-	if err := namespace.InitNamespace(newRootPath); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
-	}
-
-	container.Run(int32(timeout), input, expected, "/Main")
+	container.Run(int32(timeout), memory, pid, containerID, basedir, input, expected, "/Main")
 }
 
 func main() {
@@ -48,16 +42,8 @@ func main() {
 	memory := flag.String("memory", "64", "memory limitation in MB")
 	flag.Parse()
 
-	pid, containerID := os.Getpid(), uuid.NewV4().String()
-
-	if err := cgroup.InitCGroup(string(pid), containerID, *memory); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		return
-	}
-
-	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout)
+	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout, *memory,
+		strconv.Itoa(os.Getpid()), uuid.NewV4().String())
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -89,10 +75,5 @@ func main() {
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 	}
-
-	if err := cgroup.Cleanup(containerID); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerCleanupError"})
-	}
-
 	os.Exit(models.CODE_OK)
 }
