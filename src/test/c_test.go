@@ -205,7 +205,7 @@ func Test_C_Memory_Allocation(t *testing.T) {
 
 	containerErr := runC(baseDir, projectDir, t)
 
-	if !strings.Contains(containerErr, "Killed") {
+	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
 		t.FailNow()
