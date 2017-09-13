@@ -56,7 +56,7 @@ func runC(baseDir, projectDir string, t *testing.T) (string) {
 	t.Log("Running binary /Main ...")
 
 	var containerStdout bytes.Buffer
-	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23PM", "-expected=22:10:23"}
+	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23PM", "-expected=22:10:23", "-memory=16"}
 	containerCmd := exec.Command(projectDir+"/bin/c_container", containerArgs...)
 	containerCmd.Stdout = &containerStdout
 	containerErr := containerCmd.Run()
