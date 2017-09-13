@@ -36,7 +36,7 @@ func compileCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Compiling file %s ...", name)
 
 	var compilerStderr bytes.Buffer
-	compilerCmd := exec.Command(projectDir+"/bin/cpp_compiler", "-basedir=" + baseDir)
+	compilerCmd := exec.Command(projectDir+"/bin/cpp_compiler", "-basedir="+baseDir)
 	compilerCmd.Stderr = &compilerStderr
 	compilerErr := compilerCmd.Run()
 
@@ -52,11 +52,11 @@ func compileCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 
 // HELPER
 // run CPP binary in our container
-func runCpp(baseDir, projectDir string, t *testing.T) (string) {
+func runCpp(baseDir, projectDir, memory, timeout string, t *testing.T) (string) {
 	t.Log("Running file /Main ...")
 
 	var containerStdout bytes.Buffer
-	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23AM", "-expected=10:10:23"}
+	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23AM", "-expected=10:10:23", "-memory=" + memory, "-timeout=" + timeout}
 	containerCmd := exec.Command(projectDir+"/bin/cpp_container", containerArgs...)
 	containerCmd.Stdout = &containerStdout
 	containerErr := containerCmd.Run()
@@ -82,7 +82,7 @@ func Test_Cpp_AC(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, t)
+	containerErr := runCpp(baseDir, projectDir, "16", "3000", t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
@@ -173,7 +173,7 @@ func Test_Cpp_Fork_Bomb(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, t)
+	containerErr := runCpp(baseDir, projectDir, "64", "3000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -209,7 +209,7 @@ func Test_Cpp_Infinite_Loop(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, t)
+	containerErr := runCpp(baseDir, projectDir, "64", "3000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -246,7 +246,7 @@ func Test_Cpp_Run_Command_Line_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, t)
+	containerErr := runCpp(baseDir, projectDir, "16", "3000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")

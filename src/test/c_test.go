@@ -52,11 +52,11 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 
 // HELPER
 // run C binary in our container
-func runC(baseDir, projectDir string, t *testing.T) (string) {
+func runC(baseDir, projectDir, memory, timeout string, t *testing.T) (string) {
 	t.Log("Running binary /Main ...")
 
 	var containerStdout bytes.Buffer
-	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23PM", "-expected=22:10:23", "-memory=16", "-timeout=10000"}
+	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23PM", "-expected=22:10:23", "-memory=" + memory, "-timeout=" + timeout}
 	containerCmd := exec.Command(projectDir+"/bin/c_container", containerArgs...)
 	containerCmd.Stdout = &containerStdout
 	containerErr := containerCmd.Run()
@@ -82,7 +82,7 @@ func Test_C_AC(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "16", "3000", t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
@@ -145,7 +145,7 @@ func Test_C_Fork_Bomb(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "64", "3000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -167,7 +167,7 @@ func Test_C_Get_Host_By_Name(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "16", "3000", t)
 
 	// Main.c:(.text+0x28): warning: Using 'gethostbyname' in statically linked applications
 	// requires at runtime the shared libraries from the glibc version used for linking
@@ -205,7 +205,7 @@ func Test_C_Infinite_Loop(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "64", "3000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -227,7 +227,7 @@ func Test_C_Memory_Allocation(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "16", "15000", t)
 
 	// `Killed` is sent to tty by kernel (and record will also be kept in /var/log/message)
 	// both stdout and stderr are empty which will lead to status WA
@@ -266,7 +266,7 @@ func Test_C_Run_Command_Line_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "16", "3000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -288,7 +288,7 @@ func Test_C_Run_Command_Line_1(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "16", "3000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -310,7 +310,7 @@ func Test_C_Syscall_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, t)
+	containerErr := runC(baseDir, projectDir, "16", "3000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
