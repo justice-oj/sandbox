@@ -157,7 +157,7 @@ func Test_C_Fork_Bomb(t *testing.T) {
 }
 
 func Test_C_Get_Host_By_Name(t *testing.T) {
-	name := "tcp_client.c"
+	name := "get_host_by_name.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
 	compilerStderr := compileC(name, baseDir, projectDir, t)
 
