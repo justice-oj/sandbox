@@ -156,6 +156,30 @@ func Test_C_Fork_Bomb(t *testing.T) {
 	os.RemoveAll(baseDir + "/")
 }
 
+func Test_C_Get_Host_By_Name(t *testing.T) {
+	name := "tcp_client.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+
+	if len(compilerStderr) > 0 {
+		os.RemoveAll(baseDir + "/")
+		t.Error(compilerStderr)
+		t.FailNow()
+	}
+
+	containerErr := runC(baseDir, projectDir, t)
+
+	// Main.c:(.text+0x28): warning: Using 'gethostbyname' in statically linked applications
+	// requires at runtime the shared libraries from the glibc version used for linking
+	if !strings.Contains(containerErr, "\"status\":2") {
+		os.RemoveAll(baseDir + "/")
+		t.Error(containerErr)
+		t.FailNow()
+	}
+
+	os.RemoveAll(baseDir + "/")
+}
+
 func Test_C_Include_Leaks(t *testing.T) {
 	name := "include_leaks.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
@@ -289,34 +313,6 @@ func Test_C_Syscall_0(t *testing.T) {
 	containerErr := runC(baseDir, projectDir, t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
-		os.RemoveAll(baseDir + "/")
-		t.Error(containerErr)
-		t.FailNow()
-	}
-
-	os.RemoveAll(baseDir + "/")
-}
-
-func Test_C_TCP_Client(t *testing.T) {
-	name := "tcp_client.c"
-	baseDir, projectDir := copyCSourceFile(name, t)
-	compilerStderr := compileC(name, baseDir, projectDir, t)
-
-	if len(compilerStderr) > 0 {
-		os.RemoveAll(baseDir + "/")
-		t.Error(compilerStderr)
-		t.FailNow()
-	}
-
-	containerErr := runC(baseDir, projectDir, t)
-
-	if !strings.Contains(containerErr, "\"status\":5") {
-		os.RemoveAll(baseDir + "/")
-		t.Error(containerErr)
-		t.FailNow()
-	}
-
-	if !strings.Contains(containerErr, "gethostbyname error") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr)
 		t.FailNow()
