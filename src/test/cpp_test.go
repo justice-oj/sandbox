@@ -82,7 +82,7 @@ func Test_Cpp_AC(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, "16", "3000", t)
+	containerErr := runCpp(baseDir, projectDir, "16", "1000", t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
@@ -173,7 +173,7 @@ func Test_Cpp_Fork_Bomb(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, "64", "3000", t)
+	containerErr := runCpp(baseDir, projectDir, "64", "1000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -209,7 +209,7 @@ func Test_Cpp_Infinite_Loop(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, "64", "3000", t)
+	containerErr := runCpp(baseDir, projectDir, "64", "1000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -246,7 +246,7 @@ func Test_Cpp_Run_Command_Line_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runCpp(baseDir, projectDir, "16", "3000", t)
+	containerErr := runCpp(baseDir, projectDir, "16", "1000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
