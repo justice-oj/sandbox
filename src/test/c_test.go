@@ -82,7 +82,7 @@ func Test_C_AC(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "16", "3000", t)
+	containerErr := runC(baseDir, projectDir, "64", "1000", t)
 	if !strings.Contains(containerErr, "\"status\":0") {
 		os.RemoveAll(baseDir + "/")
 		t.Error(containerErr + " => status != 0")
@@ -145,7 +145,7 @@ func Test_C_Fork_Bomb(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "64", "3000", t)
+	containerErr := runC(baseDir, projectDir, "64", "1000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -167,7 +167,7 @@ func Test_C_Get_Host_By_Name(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "16", "3000", t)
+	containerErr := runC(baseDir, projectDir, "64", "1000", t)
 
 	// Main.c:(.text+0x28): warning: Using 'gethostbyname' in statically linked applications
 	// requires at runtime the shared libraries from the glibc version used for linking
@@ -205,7 +205,7 @@ func Test_C_Infinite_Loop(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "64", "3000", t)
+	containerErr := runC(baseDir, projectDir, "64", "1000", t)
 
 	if !strings.Contains(containerErr, "Runtime Error") {
 		os.RemoveAll(baseDir + "/")
@@ -266,7 +266,7 @@ func Test_C_Run_Command_Line_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "16", "3000", t)
+	containerErr := runC(baseDir, projectDir, "16", "1000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -288,7 +288,7 @@ func Test_C_Run_Command_Line_1(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "16", "3000", t)
+	containerErr := runC(baseDir, projectDir, "16", "1000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
@@ -310,7 +310,7 @@ func Test_C_Syscall_0(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "16", "3000", t)
+	containerErr := runC(baseDir, projectDir, "16", "1000", t)
 
 	if !strings.Contains(containerErr, "\"status\":5") {
 		os.RemoveAll(baseDir + "/")
