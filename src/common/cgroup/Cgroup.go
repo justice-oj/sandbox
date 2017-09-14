@@ -97,6 +97,11 @@ func memoryCGroup(pid, containerID, memory string) error {
 		return err
 	}
 
+	quotaKernelMemoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.kmem.limit_in_bytes"))
+	if err := quotaKernelMemoryCmd.Run(); err != nil {
+		return err
+	}
+
 	quotaMemorySwapCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.memsw.limit_in_bytes"))
 	if err := quotaMemorySwapCmd.Run(); err != nil {
 		return err
