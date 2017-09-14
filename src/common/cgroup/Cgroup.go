@@ -7,11 +7,16 @@ import (
 
 const (
 	cgCPUPathPrefix    = "/sys/fs/cgroup/cpu/"
+	cgPidPathPrefix    = "/sys/fs/cgroup/pids/"
 	cgMemoryPathPrefix = "/sys/fs/cgroup/memory/"
 )
 
 func InitCGroup(pid, containerID, memory string) error {
 	if err := cpuCGroup(pid, containerID); err != nil {
+		return err
+	}
+
+	if err := pidCGroup(pid, containerID); err != nil {
 		return err
 	}
 
@@ -39,6 +44,31 @@ func cpuCGroup(pid, containerID string) error {
 
 	// cpu usage max up to 2%
 	quotaCmd := exec.Command("/usr/bin/echo", "2000", ">", filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"))
+	if err := quotaCmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func pidCGroup(pid, containerID string) error {
+	cgPidPath := filepath.Join(cgPidPathPrefix, containerID)
+
+	// add sub cgroup system
+	mkdirCmd := exec.Command("/usr/bin/mkdir", cgPidPath)
+	if err := mkdirCmd.Run(); err != nil {
+		return err
+	}
+
+	// add current pid to cgroup pids
+	taskCmd := exec.Command("/usr/bin/echo", pid, ">", filepath.Join(cgPidPath, "/cgroup.procs"))
+	if err := taskCmd.Run(); err != nil {
+		return err
+	}
+
+	// max limitation on fork() and clone()
+	// https://www.kernel.org/doc/Documentation/cgroup-v1/pids.txt
+	quotaCmd := exec.Command("/usr/bin/echo", "4", ">", filepath.Join(cgPidPath, "/pids.max"))
 	if err := quotaCmd.Run(); err != nil {
 		return err
 	}
@@ -76,14 +106,19 @@ func memoryCGroup(pid, containerID, memory string) error {
 }
 
 func Cleanup(containerID string) error {
-	cleanCPUCommand := exec.Command("rmdir", cgCPUPathPrefix + containerID)
-	if cpuErr := cleanCPUCommand.Run(); cpuErr != nil {
-		return cpuErr
+	cleanCPUCommand := exec.Command("rmdir", filepath.Join(cgCPUPathPrefix, containerID))
+	if err := cleanCPUCommand.Run(); err != nil {
+		return err
 	}
 
-	cleanMemoryCommand := exec.Command("rmdir", cgMemoryPathPrefix + containerID)
-	if cpuErr := cleanMemoryCommand.Run(); cpuErr != nil {
-		return cpuErr
+	cleanPidCommand := exec.Command("rmdir", filepath.Join(cgPidPathPrefix, containerID))
+	if err := cleanPidCommand.Run(); err != nil {
+		return err
+	}
+
+	cleanMemoryCommand := exec.Command("rmdir", filepath.Join(cgMemoryPathPrefix, containerID))
+	if err := cleanMemoryCommand.Run(); err != nil {
+		return err
 	}
 
 	return nil
