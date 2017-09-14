@@ -227,7 +227,7 @@ func Test_C_Memory_Allocation(t *testing.T) {
 		t.FailNow()
 	}
 
-	containerErr := runC(baseDir, projectDir, "16", "15000", t)
+	containerErr := runC(baseDir, projectDir, "8", "15000", t)
 
 	// `Killed` is sent to tty by kernel (and record will also be kept in /var/log/message)
 	// both stdout and stderr are empty which will lead to status WA
