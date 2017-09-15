@@ -1,4 +1,4 @@
-package namespace
+package sandbox
 
 import (
 	"path/filepath"

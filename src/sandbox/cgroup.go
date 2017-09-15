@@ -1,4 +1,4 @@
-package cgroup
+package sandbox
 
 import (
 	"path/filepath"
@@ -110,7 +110,7 @@ func memoryCGroup(pid, containerID, memory string) error {
 	return nil
 }
 
-func Cleanup(containerID string) error {
+func CleanupCGroup(containerID string) error {
 	cleanCPUCommand := exec.Command("rmdir", filepath.Join(cgCPUPathPrefix, containerID))
 	if err := cleanCPUCommand.Run(); err != nil {
 		return err

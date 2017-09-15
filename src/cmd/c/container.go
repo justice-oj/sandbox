@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"os"
 	"syscall"
+	"flag"
+	"strconv"
+
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/satori/go.uuid"
 	"github.com/getsentry/raven-go"
+
 	"../../models"
 	"../../config"
-	"../../common/cgroup"
-	"../../common/container"
-	"flag"
-	"strconv"
+	"../../sandbox"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func justiceInit() {
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
-	container.Run(int32(timeout), basedir, input, expected, "/Main")
+	sandbox.Run(int32(timeout), basedir, input, expected, "/Main")
 }
 
 func main() {
@@ -43,8 +44,8 @@ func main() {
 	pid, containerID := strconv.Itoa(os.Getpid()), uuid.NewV4().String()
 
 	// Init CGroup
-	if err := cgroup.InitCGroup(string(pid), containerID, *memory); err != nil {
-		cgroup.Cleanup(containerID)
+	if err := sandbox.InitCGroup(string(pid), containerID, *memory); err != nil {
+		sandbox.CleanupCGroup(containerID)
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -84,7 +85,7 @@ func main() {
 		os.Stdout.Write(result)
 	}
 
-	cgroup.Cleanup(containerID)
+	sandbox.CleanupCGroup(containerID)
 
 	os.Exit(models.CODE_OK)
 }

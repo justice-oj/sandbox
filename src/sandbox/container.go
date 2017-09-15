@@ -1,21 +1,22 @@
-package container
+package sandbox
 
 import (
 	"bytes"
 	"strings"
 	"syscall"
-	"github.com/getsentry/raven-go"
 	"os/exec"
 	"os"
 	"time"
 	"encoding/json"
-	"../../models"
-	"../../common/namespace"
+
+	"github.com/getsentry/raven-go"
+
+	"../models"
 )
 
 func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...string) {
 	// Init Namespace
-	if err := namespace.InitNamespace(basedir); err != nil {
+	if err := InitNamespace(basedir); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
