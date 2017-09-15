@@ -99,6 +99,11 @@ func memoryCGroup(pid, containerID, memory string) error {
 		return err
 	}
 
+	memswCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.memsw.limit_in_bytes"))
+	if err := memswCmd.Run(); err != nil {
+		return err
+	}
+
 	swappinessCmd := exec.Command("/usr/bin/echo", "0", ">", filepath.Join(cgMemoryPath, "/memory.swappiness"))
 	if err := swappinessCmd.Run(); err != nil {
 		return err
