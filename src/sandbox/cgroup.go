@@ -27,6 +27,7 @@ func InitCGroup(pid, containerID, memory string) error {
 	return nil
 }
 
+// https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
 func cpuCGroup(pid, containerID string) error {
 	cgCPUPath := filepath.Join(cgCPUPathPrefix, containerID)
 
@@ -42,7 +43,7 @@ func cpuCGroup(pid, containerID string) error {
 		return err
 	}
 
-	// cpu usage max up to 2%
+	// limit a group to 2% of 1 CPU
 	quotaCmd := exec.Command("/usr/bin/echo", "2000", ">", filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"))
 	if err := quotaCmd.Run(); err != nil {
 		return err
@@ -51,6 +52,7 @@ func cpuCGroup(pid, containerID string) error {
 	return nil
 }
 
+// https://www.kernel.org/doc/Documentation/cgroup-v1/pids.txt
 func pidCGroup(pid, containerID string) error {
 	cgPidPath := filepath.Join(cgPidPathPrefix, containerID)
 
@@ -66,9 +68,8 @@ func pidCGroup(pid, containerID string) error {
 		return err
 	}
 
-	// max limitation on fork() and clone()
-	// https://www.kernel.org/doc/Documentation/cgroup-v1/pids.txt
-	quotaCmd := exec.Command("/usr/bin/echo", "4", ">", filepath.Join(cgPidPath, "/pids.max"))
+	// max pids limitation
+	quotaCmd := exec.Command("/usr/bin/echo", "2", ">", filepath.Join(cgPidPath, "/pids.max"))
 	if err := quotaCmd.Run(); err != nil {
 		return err
 	}
@@ -76,6 +77,7 @@ func pidCGroup(pid, containerID string) error {
 	return nil
 }
 
+// https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
 func memoryCGroup(pid, containerID, memory string) error {
 	cgMemoryPath := filepath.Join(cgMemoryPathPrefix, containerID)
 
@@ -92,23 +94,18 @@ func memoryCGroup(pid, containerID, memory string) error {
 	}
 
 	// set memory usage limitation
-	swapCmd := exec.Command("/usr/bin/echo", "0", ">", filepath.Join(cgMemoryPath, "/memory.swappiness"))
-	if err := swapCmd.Run(); err != nil {
+	memoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"))
+	if err := memoryCmd.Run(); err != nil {
 		return err
 	}
 
-	quotaMemoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"))
-	if err := quotaMemoryCmd.Run(); err != nil {
+	swappinessCmd := exec.Command("/usr/bin/echo", "0", ">", filepath.Join(cgMemoryPath, "/memory.swappiness"))
+	if err := swappinessCmd.Run(); err != nil {
 		return err
 	}
 
-	quotaKernelMemoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.kmem.limit_in_bytes"))
-	if err := quotaKernelMemoryCmd.Run(); err != nil {
-		return err
-	}
-
-	quotaMemorySwapCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.memsw.limit_in_bytes"))
-	if err := quotaMemorySwapCmd.Run(); err != nil {
+	kernelMemoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.kmem.limit_in_bytes"))
+	if err := kernelMemoryCmd.Run(); err != nil {
 		return err
 	}
 
