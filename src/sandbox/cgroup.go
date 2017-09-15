@@ -92,6 +92,11 @@ func memoryCGroup(pid, containerID, memory string) error {
 	}
 
 	// set memory usage limitation
+	swapCmd := exec.Command("/usr/bin/echo", "0", ">", filepath.Join(cgMemoryPath, "/memory.swappiness"))
+	if err := swapCmd.Run(); err != nil {
+		return err
+	}
+
 	quotaMemoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"))
 	if err := quotaMemoryCmd.Run(); err != nil {
 		return err
@@ -110,7 +115,7 @@ func memoryCGroup(pid, containerID, memory string) error {
 	return nil
 }
 
-func CleanupCGroup(containerID string) error {
+func Cleanup(containerID string) error {
 	cleanCPUCommand := exec.Command("rmdir", filepath.Join(cgCPUPathPrefix, containerID))
 	if err := cleanCPUCommand.Run(); err != nil {
 		return err
