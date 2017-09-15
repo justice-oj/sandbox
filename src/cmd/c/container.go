@@ -11,7 +11,7 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/getsentry/raven-go"
 
-	"../../models"
+	"../../model"
 	"../../config"
 	"../../sandbox"
 )
@@ -20,7 +20,7 @@ func init() {
 	raven.SetDSN(config.SENTRY_DSN)
 	reexec.Register("justiceInit", justiceInit)
 	if reexec.Init() {
-		os.Exit(models.CODE_OK)
+		os.Exit(0)
 	}
 }
 
@@ -42,12 +42,13 @@ func main() {
 	flag.Parse()
 
 	pid, containerID := strconv.Itoa(os.Getpid()), uuid.NewV4().String()
+	result := new(model.Result)
 
 	// Init CGroup
 	if err := sandbox.InitCGroup(string(pid), containerID, *memory); err != nil {
 		sandbox.CleanupCGroup(containerID)
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		return
 	}
@@ -81,11 +82,11 @@ func main() {
 
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 	}
 
 	sandbox.CleanupCGroup(containerID)
 
-	os.Exit(models.CODE_OK)
+	os.Exit(0)
 }

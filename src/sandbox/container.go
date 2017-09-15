@@ -11,16 +11,18 @@ import (
 
 	"github.com/getsentry/raven-go"
 
-	"../models"
+	"../model"
 )
 
 func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...string) {
+	r := new(model.Result)
+
 	// Init Namespace
 	if err := InitNamespace(basedir); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Exit(models.CODE_INIT_CONTAINER_FAILED)
+		os.Exit(0)
 	}
 
 	var o, e bytes.Buffer
@@ -40,14 +42,14 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 	startTime := time.Now().UnixNano() / int64(time.Millisecond)
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		return
 	}
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
 
 	if e.Len() > 0 {
-		result, _ := json.Marshal(models.GetRuntimeErrorTaskResult())
+		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
 		return
 	}
@@ -56,10 +58,10 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 	if output == expected {
 		// ms, MB
 		timeCost, memoryCost := endTime-startTime, cmd.ProcessState.SysUsage().(*syscall.Rusage).Maxrss/1024
-		result, _ := json.Marshal(models.GetAccepptedTaskResult(timeCost, memoryCost))
+		result, _ := json.Marshal(r.GetAcceptedTaskResult(timeCost, memoryCost))
 		os.Stdout.Write(result)
 	} else {
-		result, _ := json.Marshal(models.GetWrongAnswerTaskResult(input, output, expected))
+		result, _ := json.Marshal(r.GetWrongAnswerTaskResult(input, output, expected))
 		os.Stdout.Write(result)
 	}
 }
