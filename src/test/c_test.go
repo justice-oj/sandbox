@@ -55,19 +55,19 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 func runC(baseDir, projectDir, memory, timeout string, t *testing.T) (string) {
 	t.Log("Running binary /Main ...")
 
-	var containerStdout bytes.Buffer
+	var containerStdout, containerStderr bytes.Buffer
 	containerArgs := []string{"-basedir=" + baseDir, "-input=10:10:23PM", "-expected=22:10:23", "-memory=" + memory, "-timeout=" + timeout}
 	containerCmd := exec.Command(projectDir+"/bin/c_container", containerArgs...)
 	containerCmd.Stdout = &containerStdout
-	containerErr := containerCmd.Run()
+	containerCmd.Stderr = &containerStderr
 
-	if containerErr != nil {
+	if err := containerCmd.Run(); err != nil {
 		os.RemoveAll(baseDir + "/")
-		t.Error(containerErr.Error())
+		t.Error(err.Error())
 		t.FailNow()
 	}
 
-	t.Log("Done")
+	t.Log(containerStderr.String())
 	return containerStdout.String()
 }
 
