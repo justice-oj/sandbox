@@ -33,6 +33,7 @@ func justiceInit() {
 	sandbox.Run(int32(timeout), basedir, input, expected, "/Main")
 }
 
+// logs will be printed to os.Stderr
 func main() {
 	basedir := flag.String("basedir", "/tmp", "basedir of tmp C binary")
 	input := flag.String("input", "<input>", "test case input")

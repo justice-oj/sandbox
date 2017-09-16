@@ -17,7 +17,6 @@ import (
 func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...string) {
 	r := new(model.Result)
 
-	// Init Namespace
 	if err := InitNamespace(basedir); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
@@ -44,6 +43,7 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
+		os.Stderr.WriteString(err.Error())
 		return
 	}
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
@@ -51,6 +51,7 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 	if e.Len() > 0 {
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
+		os.Stderr.WriteString(e.String())
 		return
 	}
 
@@ -64,4 +65,6 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 		result, _ := json.Marshal(r.GetWrongAnswerTaskResult(input, output, expected))
 		os.Stdout.Write(result)
 	}
+
+	os.Stderr.WriteString("output: " + output + " | " + "expected: " + expected)
 }
