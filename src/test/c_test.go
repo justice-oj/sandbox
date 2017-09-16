@@ -322,3 +322,25 @@ func Test_C_Syscall_0(t *testing.T) {
 
 	os.RemoveAll(baseDir + "/")
 }
+
+func Test_C_TCP_Client(t *testing.T) {
+	name := "tcp_client.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+
+	if len(compilerStderr) > 0 {
+		os.RemoveAll(baseDir + "/")
+		t.Error(compilerStderr)
+		t.FailNow()
+	}
+
+	containerErr := runC(baseDir, projectDir, "16", "5000", t)
+
+	if !strings.Contains(containerErr, "Runtime Error") {
+		os.RemoveAll(baseDir + "/")
+		t.Error(containerErr)
+		t.FailNow()
+	}
+
+	os.RemoveAll(baseDir + "/")
+}
