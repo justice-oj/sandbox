@@ -43,7 +43,7 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString("Error: " + err.Error() + "\n")
 		return
 	}
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
@@ -51,7 +51,7 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 	if e.Len() > 0 {
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		os.Stderr.WriteString(e.String())
+		os.Stderr.WriteString("stderr: " + e.String() + "\n")
 		return
 	}
 
@@ -66,5 +66,5 @@ func Run(timeout int32, basedir, input, expected, cmdName string, cmdArgs ...str
 		os.Stdout.Write(result)
 	}
 
-	os.Stderr.WriteString("output: " + output + " | " + "expected: " + expected)
+	os.Stderr.WriteString("output: " + output + " | " + "expected: " + expected + "\n")
 }
