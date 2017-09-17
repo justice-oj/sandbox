@@ -2,8 +2,8 @@ package sandbox
 
 import (
 	"path/filepath"
-	"os/exec"
 	"os"
+	"io/ioutil"
 )
 
 const (
@@ -14,6 +14,21 @@ const (
 
 func InitCGroup(pid, containerID, memory string) error {
 	os.Stderr.WriteString("InitCGroup starting...\n")
+
+	dirs := []string{
+		filepath.Join(cgCPUPathPrefix, containerID),
+		filepath.Join(cgPidPathPrefix, containerID),
+		filepath.Join(cgMemoryPathPrefix, containerID),
+	}
+
+	for _, dir := range dirs {
+		os.Stderr.WriteString("os.MkdirAll " + dir + "\n")
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			os.Stderr.WriteString(err.Error() + "\n")
+			os.Stderr.WriteString("os.MkdirAll " + dir + " failed \n")
+			return err
+		}
+	}
 
 	if err := cpuCGroup(pid, containerID); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
@@ -41,28 +56,20 @@ func InitCGroup(pid, containerID, memory string) error {
 func cpuCGroup(pid, containerID string) error {
 	cgCPUPath := filepath.Join(cgCPUPathPrefix, containerID)
 
-	// add sub cgroup system
-	mkdirCmd := exec.Command("/usr/bin/mkdir", cgCPUPath)
-	os.Stderr.WriteString("# /usr/bin/mkdir " + cgCPUPath + "\n")
-	if err := mkdirCmd.Run(); err != nil {
-		os.Stderr.WriteString("mkdirCmd failed \n")
-		return err
+	configs := map[string]string{
+		"tasks":            pid,
+		"cpu.cfs_quota_us": "2000",
 	}
 
-	// add current pid to cgroup cpu
-	taskCmd := exec.Command("/usr/bin/echo", pid, ">", filepath.Join(cgCPUPath, "/tasks"))
-	os.Stderr.WriteString("# /usr/bin/echo " + pid + " > " + filepath.Join(cgCPUPath, "/tasks") + "\n")
-	if err := taskCmd.Run(); err != nil {
-		os.Stderr.WriteString("taskCmd failed \n")
-		return err
-	}
-
-	// limit a group to 2% of 1 CPU
-	quotaCmd := exec.Command("/usr/bin/echo", "2000", ">", filepath.Join(cgCPUPath, "/cpu.cfs_quota_us"))
-	os.Stderr.WriteString("# /usr/bin/echo 2000 > " + filepath.Join(cgCPUPath, "/cpu.cfs_quota_us") + "\n")
-	if err := quotaCmd.Run(); err != nil {
-		os.Stderr.WriteString("quotaCmd failed \n")
-		return err
+	for file, content := range configs {
+		path := filepath.Join(cgCPUPath, file)
+		os.Stderr.WriteString("writing [" + content + "] to file: " + path + "\n")
+		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+			os.Stderr.WriteString("write failed \n")
+			return err
+		}
+		c, _ := ioutil.ReadFile(path)
+		os.Stderr.WriteString("content of " + path + ": " + string(c))
 	}
 
 	os.Stderr.WriteString("cpuCGroup done\n")
@@ -73,28 +80,20 @@ func cpuCGroup(pid, containerID string) error {
 func pidCGroup(pid, containerID string) error {
 	cgPidPath := filepath.Join(cgPidPathPrefix, containerID)
 
-	// add sub cgroup system
-	mkdirCmd := exec.Command("/usr/bin/mkdir", cgPidPath)
-	os.Stderr.WriteString("# /usr/bin/mkdir " + cgPidPath + "\n")
-	if err := mkdirCmd.Run(); err != nil {
-		os.Stderr.WriteString("mkdirCmd failed \n")
-		return err
+	configs := map[string]string{
+		"cgroup.procs": pid,
+		"pids.max":     "2",
 	}
 
-	// add current pid to cgroup pids
-	taskCmd := exec.Command("/usr/bin/echo", pid, ">", filepath.Join(cgPidPath, "/cgroup.procs"))
-	os.Stderr.WriteString("# /usr/bin/echo " + pid + " > " + filepath.Join(cgPidPath, "/cgroup.procs") + "\n")
-	if err := taskCmd.Run(); err != nil {
-		os.Stderr.WriteString("taskCmd failed \n")
-		return err
-	}
-
-	// max pids limitation
-	quotaCmd := exec.Command("/usr/bin/echo", "2", ">", filepath.Join(cgPidPath, "/pids.max"))
-	os.Stderr.WriteString("# /usr/bin/echo 2 > " + filepath.Join(cgPidPath, "/pids.max") + "\n")
-	if err := quotaCmd.Run(); err != nil {
-		os.Stderr.WriteString("quotaCmd failed \n")
-		return err
+	for file, content := range configs {
+		path := filepath.Join(cgPidPath, file)
+		os.Stderr.WriteString("writing [" + content + "] to file: " + path + "\n")
+		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+			os.Stderr.WriteString("write failed \n")
+			return err
+		}
+		c, _ := ioutil.ReadFile(path)
+		os.Stderr.WriteString("content of " + path + ": " + string(c))
 	}
 
 	os.Stderr.WriteString("pidCGroup done \n")
@@ -105,49 +104,23 @@ func pidCGroup(pid, containerID string) error {
 func memoryCGroup(pid, containerID, memory string) error {
 	cgMemoryPath := filepath.Join(cgMemoryPathPrefix, containerID)
 
-	// add sub cgroup system
-	mkdirCmd := exec.Command("/usr/bin/mkdir", cgMemoryPath)
-	os.Stderr.WriteString("# /usr/bin/mkdir " + cgMemoryPath + "\n")
-	if err := mkdirCmd.Run(); err != nil {
-		os.Stderr.WriteString("mkdirCmd failed \n")
-		return err
+	configs := map[string]string{
+		"tasks":                       pid,
+		"memory.limit_in_bytes":       memory + "m",
+		"memory.memsw.limit_in_bytes": memory + "m",
+		"memory.kmem.limit_in_bytes":  "8m",
+		"memory.swappiness":           "0",
 	}
 
-	// add current pid to cgroup memory
-	taskCmd := exec.Command("/usr/bin/echo", pid, ">", filepath.Join(cgMemoryPath, "/tasks"))
-	os.Stderr.WriteString("# /usr/bin/echo " + pid + " > " + filepath.Join(cgMemoryPath, "/tasks") + "\n")
-	if err := taskCmd.Run(); err != nil {
-		os.Stderr.WriteString("taskCmd failed \n")
-		return err
-	}
-
-	// set memory usage limitation
-	memoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.limit_in_bytes"))
-	os.Stderr.WriteString("# /usr/bin/echo " + memory + "m > " + filepath.Join(cgMemoryPath, "/memory.limit_in_bytes") + "\n")
-	if err := memoryCmd.Run(); err != nil {
-		os.Stderr.WriteString("memoryCmd failed \n")
-		return err
-	}
-
-	memswCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.memsw.limit_in_bytes"))
-	os.Stderr.WriteString("# /usr/bin/echo " + memory + "m > " + filepath.Join(cgMemoryPath, "/memory.memsw.limit_in_bytes") + "\n")
-	if err := memswCmd.Run(); err != nil {
-		os.Stderr.WriteString("memswCmd failed \n")
-		return err
-	}
-
-	swappinessCmd := exec.Command("/usr/bin/echo", "0", ">", filepath.Join(cgMemoryPath, "/memory.swappiness"))
-	os.Stderr.WriteString("# /usr/bin/echo 0 > " + filepath.Join(cgMemoryPath, "/memory.swappiness") + "\n")
-	if err := swappinessCmd.Run(); err != nil {
-		os.Stderr.WriteString("swappinessCmd failed \n")
-		return err
-	}
-
-	kernelMemoryCmd := exec.Command("/usr/bin/echo", memory+"m", ">", filepath.Join(cgMemoryPath, "/memory.kmem.limit_in_bytes"))
-	os.Stderr.WriteString("# /usr/bin/echo " + memory + "m > " + filepath.Join(cgMemoryPath, "/memory.kmem.limit_in_bytes") + "\n")
-	if err := kernelMemoryCmd.Run(); err != nil {
-		os.Stderr.WriteString("kernelMemoryCmd failed \n")
-		return err
+	for file, content := range configs {
+		path := filepath.Join(cgMemoryPath, file)
+		os.Stderr.WriteString("writing [" + content + "] to file: " + path + "\n")
+		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+			os.Stderr.WriteString("write failed \n")
+			return err
+		}
+		c, _ := ioutil.ReadFile(path)
+		os.Stderr.WriteString("content of " + path + ": " + string(c))
 	}
 
 	os.Stderr.WriteString("memoryCGroup done \n")
@@ -157,28 +130,19 @@ func memoryCGroup(pid, containerID, memory string) error {
 func CleanupCGroup(containerID string) error {
 	os.Stderr.WriteString("CleanupCGroup starting...\n")
 
-	cleanCPUCommand := exec.Command("/usr/bin/rmdir", filepath.Join(cgCPUPathPrefix, containerID))
-	os.Stderr.WriteString("# /usr/bin/rmdir " + filepath.Join(cgCPUPathPrefix, containerID) + "\n")
-	if err := cleanCPUCommand.Run(); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("cleanCPUCommand failed \n")
-		return err
+	dirs := []string{
+		filepath.Join(cgCPUPathPrefix, containerID),
+		filepath.Join(cgPidPathPrefix, containerID),
+		filepath.Join(cgMemoryPathPrefix, containerID),
 	}
 
-	cleanPidCommand := exec.Command("/usr/bin/rmdir", filepath.Join(cgPidPathPrefix, containerID))
-	os.Stderr.WriteString("# /usr/bin/rmdir " + filepath.Join(cgPidPathPrefix, containerID) + "\n")
-	if err := cleanPidCommand.Run(); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("cleanPidCommand failed \n")
-		return err
-	}
-
-	cleanMemoryCommand := exec.Command("/usr/bin/rmdir", filepath.Join(cgMemoryPathPrefix, containerID))
-	os.Stderr.WriteString("# /usr/bin/rmdir " + filepath.Join(cgMemoryPathPrefix, containerID) + "\n")
-	if err := cleanMemoryCommand.Run(); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("cleanMemoryCommand failed \n")
-		return err
+	for _, dir := range dirs {
+		os.Stderr.WriteString("os.Remove " + dir + "\n")
+		if err := os.Remove(dir); err != nil {
+			os.Stderr.WriteString(err.Error() + "\n")
+			os.Stderr.WriteString("os.Remove " + dir + " failed \n")
+			return err
+		}
 	}
 
 	os.Stderr.WriteString("CleanupCGroup done \n")
