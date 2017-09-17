@@ -47,10 +47,8 @@ func main() {
 	pid, containerID := strconv.Itoa(os.Getpid()), uuid.NewV4().String()
 	result := new(model.Result)
 
-	err := sandbox.InitCGroup(string(pid), containerID, *memory)
-	defer sandbox.CleanupCGroup(containerID)
-
-	if err != nil {
+	if err := sandbox.InitCGroup(string(pid), containerID, *memory); err != nil {
+		sandbox.CleanupCGroup(containerID)
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -87,8 +85,11 @@ func main() {
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
+		os.Stderr.WriteString(err.Error() + "\n")
 		os.Stdout.Write(result)
-		os.Stderr.WriteString(err.Error())
 	}
+
+	sandbox.CleanupCGroup(containerID)
+
 	os.Exit(0)
 }

@@ -56,15 +56,12 @@ func InitCGroup(pid, containerID, memory string) error {
 func cpuCGroup(pid, containerID string) error {
 	cgCPUPath := filepath.Join(cgCPUPathPrefix, containerID)
 
-	configs := map[string]string{
-		"tasks":            pid,
-		"cpu.cfs_quota_us": "2000",
-	}
-
-	for file, content := range configs {
-		path := filepath.Join(cgCPUPath, file)
-		os.Stderr.WriteString("writing [" + content + "] to file: " + path + "\n")
-		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+	keys := []string{"tasks", "cpu.cfs_quota_us"}
+	values := []string{pid, "2000"}
+	for k, v := range keys {
+		path := filepath.Join(cgCPUPath, v)
+		os.Stderr.WriteString("writing [" + values[k] + "] to file: " + path + "\n")
+		if err := ioutil.WriteFile(path, []byte(values[k]), 0644); err != nil {
 			os.Stderr.WriteString("write failed \n")
 			return err
 		}
@@ -80,15 +77,12 @@ func cpuCGroup(pid, containerID string) error {
 func pidCGroup(pid, containerID string) error {
 	cgPidPath := filepath.Join(cgPidPathPrefix, containerID)
 
-	configs := map[string]string{
-		"cgroup.procs": pid,
-		"pids.max":     "2",
-	}
-
-	for file, content := range configs {
-		path := filepath.Join(cgPidPath, file)
-		os.Stderr.WriteString("writing [" + content + "] to file: " + path + "\n")
-		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+	keys := []string{"cgroup.procs", "pids.max"}
+	values := []string{pid, "32"}
+	for k, v := range keys {
+		path := filepath.Join(cgPidPath, v)
+		os.Stderr.WriteString("writing [" + values[k] + "] to file: " + path + "\n")
+		if err := ioutil.WriteFile(path, []byte(values[k]), 0644); err != nil {
 			os.Stderr.WriteString("write failed \n")
 			return err
 		}
@@ -104,18 +98,12 @@ func pidCGroup(pid, containerID string) error {
 func memoryCGroup(pid, containerID, memory string) error {
 	cgMemoryPath := filepath.Join(cgMemoryPathPrefix, containerID)
 
-	configs := map[string]string{
-		"tasks":                       pid,
-		"memory.limit_in_bytes":       memory + "m",
-		"memory.memsw.limit_in_bytes": memory + "m",
-		"memory.kmem.limit_in_bytes":  "8m",
-		"memory.swappiness":           "0",
-	}
-
-	for file, content := range configs {
-		path := filepath.Join(cgMemoryPath, file)
-		os.Stderr.WriteString("writing [" + content + "] to file: " + path + "\n")
-		if err := ioutil.WriteFile(path, []byte(content), 0644); err != nil {
+	keys := []string{"memory.kmem.limit_in_bytes", "tasks", "memory.limit_in_bytes", "memory.memsw.limit_in_bytes"}
+	values := []string{"32m", pid, memory + "m", memory + "m"}
+	for k, v := range keys {
+		path := filepath.Join(cgMemoryPath, v)
+		os.Stderr.WriteString("writing [" + values[k] + "] to file: " + path + "\n")
+		if err := ioutil.WriteFile(path, []byte(values[k]), 0644); err != nil {
 			os.Stderr.WriteString("write failed \n")
 			return err
 		}
