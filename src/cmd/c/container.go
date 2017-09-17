@@ -30,7 +30,9 @@ func justiceInit() {
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
+	os.Stderr.WriteString("justiceInit starting... \n")
 	sandbox.Run(int32(timeout), basedir, input, expected, "/Main")
+	os.Stderr.WriteString("justiceInit done \n")
 }
 
 // logs will be printed to os.Stderr
@@ -45,9 +47,10 @@ func main() {
 	pid, containerID := strconv.Itoa(os.Getpid()), uuid.NewV4().String()
 	result := new(model.Result)
 
-	// Init CGroup
-	if err := sandbox.InitCGroup(string(pid), containerID, *memory); err != nil {
-		sandbox.CleanupCGroup(containerID)
+	err := sandbox.InitCGroup(string(pid), containerID, *memory)
+	defer sandbox.CleanupCGroup(containerID)
+
+	if err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
@@ -85,9 +88,7 @@ func main() {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
+		os.Stderr.WriteString(err.Error())
 	}
-
-	sandbox.CleanupCGroup(containerID)
-
 	os.Exit(0)
 }
