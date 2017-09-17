@@ -138,7 +138,7 @@ func CleanupCGroup(containerID string) error {
 
 	for _, dir := range dirs {
 		os.Stderr.WriteString("os.Remove " + dir + "\n")
-		if err := os.Remove(dir); err != nil {
+		if err := os.RemoveAll(dir); err != nil {
 			os.Stderr.WriteString(err.Error() + "\n")
 			os.Stderr.WriteString("os.Remove " + dir + " failed \n")
 			return err
