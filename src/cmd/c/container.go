@@ -41,7 +41,7 @@ func main() {
 	input := flag.String("input", "<input>", "test case input")
 	expected := flag.String("expected", "<expected>", "test case expected")
 	timeout := flag.String("timeout", "2000", "timeout in milliseconds")
-	memory := flag.String("memory", "64", "memory limitation in MB")
+	memory := flag.String("memory", "256", "memory limitation in MB")
 	flag.Parse()
 
 	pid, containerID := strconv.Itoa(os.Getpid()), uuid.NewV4().String()
