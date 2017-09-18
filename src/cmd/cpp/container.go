@@ -47,7 +47,6 @@ func main() {
 	result := new(model.Result)
 
 	err := sandbox.InitCGroup(string(pid), containerID, *memory)
-	defer sandbox.CleanupCGroup(containerID)
 
 	if err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
@@ -89,5 +88,6 @@ func main() {
 		os.Stdout.Write(result)
 		os.Stderr.WriteString(err.Error())
 	}
+
 	os.Exit(0)
 }
