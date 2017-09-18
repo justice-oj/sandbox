@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm bin/*
+rm bin/c_compiler bin/c_container bin/cpp_compiler bin/cpp_container
 
 echo "Download go packages..."
 go get "github.com/getsentry/raven-go"
