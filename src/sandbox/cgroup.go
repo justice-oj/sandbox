@@ -114,25 +114,3 @@ func memoryCGroup(pid, containerID, memory string) error {
 	os.Stderr.WriteString("memoryCGroup done \n")
 	return nil
 }
-
-func CleanupCGroup(containerID string) error {
-	os.Stderr.WriteString("CleanupCGroup starting...\n")
-
-	dirs := []string{
-		filepath.Join(cgCPUPathPrefix, containerID),
-		filepath.Join(cgPidPathPrefix, containerID),
-		filepath.Join(cgMemoryPathPrefix, containerID),
-	}
-
-	for _, dir := range dirs {
-		os.Stderr.WriteString("os.Remove " + dir + "\n")
-		if err := os.RemoveAll(dir); err != nil {
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Stderr.WriteString("os.Remove " + dir + " failed \n")
-			return err
-		}
-	}
-
-	os.Stderr.WriteString("CleanupCGroup done \n")
-	return nil
-}
