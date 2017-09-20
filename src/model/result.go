@@ -15,7 +15,7 @@ const (
 	_
 	STATUS_RE
 	STATUS_TLE
-	STATUS_MLE
+	_
 	STATUS_WA
 )
 
@@ -34,12 +34,6 @@ func (r *Result) GetRuntimeErrorTaskResult() *Result {
 
 func (r *Result) GetTimeLimitExceededErrorTaskResult() *Result {
 	r.Status = STATUS_TLE
-	r.Error = "Runtime Error"
-	return r
-}
-
-func (r *Result) GetMemoryLimitExceededErrorTaskResult() *Result {
-	r.Status = STATUS_MLE
 	r.Error = "Runtime Error"
 	return r
 }
