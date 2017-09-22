@@ -98,8 +98,8 @@ func pidCGroup(pid, containerID string) error {
 func memoryCGroup(pid, containerID, memory string) error {
 	cgMemoryPath := filepath.Join(cgMemoryPathPrefix, containerID)
 
-	keys := []string{"memory.kmem.limit_in_bytes", "tasks", "memory.limit_in_bytes", "memory.memsw.limit_in_bytes"}
-	values := []string{"256m", pid, memory + "m", memory + "m"}
+	keys := []string{"memory.kmem.limit_in_bytes", "tasks", "memory.limit_in_bytes"}
+	values := []string{"64m", pid, memory + "m"}
 	for k, v := range keys {
 		path := filepath.Join(cgMemoryPath, v)
 		os.Stderr.WriteString("writing [" + values[k] + "] to file: " + path + "\n")
