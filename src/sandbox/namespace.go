@@ -15,12 +15,6 @@ func InitNamespace(newRoot string) error {
 		return err
 	}
 
-	if err := mountProc(newRoot); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("mountProc failed...\n")
-		return err
-	}
-
 	if err := syscall.Sethostname([]byte("justice")); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Stderr.WriteString("Sethostname failed...\n")
@@ -77,22 +71,6 @@ func pivotRoot(newRoot string) error {
 	// remove put_old
 	if err := os.RemoveAll(putOld); err != nil {
 		os.Stderr.WriteString("Remove putOld failed...\n")
-		return err
-	}
-
-	return nil
-}
-
-func mountProc(newRoot string) error {
-	target := filepath.Join(newRoot, "/proc")
-
-	if err := os.MkdirAll(target, 0755); err != nil {
-		os.Stderr.WriteString("Mkdir target failed...\n")
-		return err
-	}
-
-	if err := syscall.Mount("proc", target, "proc", uintptr(0), ""); err != nil {
-		os.Stderr.WriteString("Mount proc failed...\n")
 		return err
 	}
 
