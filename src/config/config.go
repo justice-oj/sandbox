@@ -1,5 +1,5 @@
 package config
 
 const (
-	SENTRY_DSN = "http://e79ebf76a31a43d18ef7bdfa7381537e:5b21a25106584b39ac22ebf0752412db@127.0.0.1:12000/3"
+	SENTRY_DSN = "https://ab0dd204801244968a68a2eba0bc3100:df0f4982e4aa486982727bf72975965f@127.0.0.1:12000/4"
 )
