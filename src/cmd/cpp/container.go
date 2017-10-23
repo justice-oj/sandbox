@@ -43,16 +43,13 @@ func main() {
 	memory := flag.String("memory", "256", "memory limitation in MB")
 	flag.Parse()
 
-	pid, containerID := strconv.Itoa(os.Getpid()), uuid.NewV4().String()
 	result := new(model.Result)
 
-	err := sandbox.InitCGroup(string(pid), containerID, *memory)
-
-	if err != nil {
+	if err := sandbox.InitCGroup(strconv.Itoa(os.Getpid()), uuid.NewV4().String(), *memory); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)
-		return
+		os.Exit(0)
 	}
 
 	cmd := reexec.Command("justiceInit", *basedir, *input, *expected, *timeout, *memory)
