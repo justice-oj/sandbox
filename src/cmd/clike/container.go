@@ -22,7 +22,19 @@ import (
 
 func init() {
 	raven.SetDSN(config.SENTRY_DSN)
+	// register "justiceInit" => justiceInit() every time
 	reexec.Register("justiceInit", justiceInit)
+
+	/**
+	 * 0. `init()` adds key "justiceInit" in `map`;
+	 * 1. reexec.Init() seeks if key `os.Args[0]` exists in `registeredInitializers`;
+	 * 2. for the first time this binary is invoked, the key is os.Args[0], AKA "/path/to/clike_container",
+	      which `registeredInitializers` will return `false`;
+	 * 3. `main()` calls binary itself by reexec.Command("justiceInit", args...);
+	 * 4. for the second time this binary is invoked, the key is os.Args[0], AKA "justiceInit",
+	 *    which exists in `registeredInitializers`;
+	 * 5. the value `justiceInit()` is invoked, any hooks(like set hostname) before fork() can be placed here.
+	 */
 	if reexec.Init() {
 		os.Exit(0)
 	}
