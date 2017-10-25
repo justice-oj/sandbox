@@ -31,7 +31,8 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Compiling file %s ...", name)
 
 	var stderr bytes.Buffer
-	cmd := exec.Command(projectDir+"/bin/clike_compiler", "-basedir="+baseDir)
+	args := []string{"-compiler=/usr/bin/gcc", "-basedir=" + baseDir, "-filename=Main.c", "-timeout=5000", "-std=gnu11"}
+	cmd := exec.Command(projectDir+"/bin/clike_compiler", args...)
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
 		t.Error(err)
