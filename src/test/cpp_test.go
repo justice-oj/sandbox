@@ -31,7 +31,7 @@ func compileCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 	t.Logf("Compiling file %s ...", name)
 
 	var stderr bytes.Buffer
-	cmd := exec.Command(projectDir+"/bin/cpp_compiler", "-basedir="+baseDir)
+	cmd := exec.Command(projectDir+"/bin/clike_compiler", "-basedir="+baseDir)
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
 		t.Error(err)
@@ -47,7 +47,7 @@ func runCpp(baseDir, projectDir, memory, timeout string, t *testing.T) (string) 
 
 	var stdout, stderr bytes.Buffer
 	args := []string{"-basedir=" + baseDir, "-input=10:10:23AM", "-expected=10:10:23", "-memory=" + memory, "-timeout=" + timeout}
-	cmd := exec.Command(projectDir+"/bin/cpp_container", args...)
+	cmd := exec.Command(projectDir+"/bin/clike_container", args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
@@ -58,7 +58,7 @@ func runCpp(baseDir, projectDir, memory, timeout string, t *testing.T) (string) 
 	return stdout.String()
 }
 
-func Test_Cpp_AC(t *testing.T) {
+func TestCppAC(t *testing.T) {
 	name := "ac.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -75,7 +75,7 @@ func Test_Cpp_AC(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Compiler_Bomb_0(t *testing.T) {
+func TestCppCompilerBomb0(t *testing.T) {
 	name := "compiler_bomb_0.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -86,7 +86,7 @@ func Test_Cpp_Compiler_Bomb_0(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Compiler_Bomb_1(t *testing.T) {
+func TestCppCompilerBomb1(t *testing.T) {
 	name := "compiler_bomb_1.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -97,7 +97,7 @@ func Test_Cpp_Compiler_Bomb_1(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Compiler_Bomb_2(t *testing.T) {
+func TestCppCompilerBomb2(t *testing.T) {
 	name := "compiler_bomb_2.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -108,7 +108,7 @@ func Test_Cpp_Compiler_Bomb_2(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Compiler_Bomb_3(t *testing.T) {
+func TestCppCompilerBomb3(t *testing.T) {
 	name := "compiler_bomb_3.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -119,7 +119,7 @@ func Test_Cpp_Compiler_Bomb_3(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Compiler_Bomb_4(t *testing.T) {
+func TestCppCompilerBomb4(t *testing.T) {
 	name := "compiler_bomb_4.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -130,7 +130,7 @@ func Test_Cpp_Compiler_Bomb_4(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Fork_Bomb(t *testing.T) {
+func TestCppForkBomb(t *testing.T) {
 	name := "fork_bomb.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -147,7 +147,7 @@ func Test_Cpp_Fork_Bomb(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Include_Leaks(t *testing.T) {
+func TestCppIncludeLeaks(t *testing.T) {
 	name := "include_leaks.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -158,7 +158,7 @@ func Test_Cpp_Include_Leaks(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Infinite_Loop(t *testing.T) {
+func TestCppInfiniteLoop(t *testing.T) {
 	name := "infinite_loop.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -175,7 +175,7 @@ func Test_Cpp_Infinite_Loop(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Plain_Text(t *testing.T) {
+func TestCppPlainText(t *testing.T) {
 	name := "plain_text.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
@@ -186,7 +186,7 @@ func Test_Cpp_Plain_Text(t *testing.T) {
 	}
 }
 
-func Test_Cpp_Run_Command_Line_0(t *testing.T) {
+func TestCppRunCommandLine0(t *testing.T) {
 	name := "run_command_line_0.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)

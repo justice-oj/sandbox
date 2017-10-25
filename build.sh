@@ -6,11 +6,8 @@ go get "github.com/docker/docker/pkg/reexec"
 go get "github.com/satori/go.uuid"
 
 echo "Compile binaries..."
-go build -o bin/c_compiler src/cmd/c/compiler.go
-go build -o bin/cpp_compiler src/cmd/cpp/compiler.go
-
-go build -o bin/c_container src/cmd/c/container.go
-go build -o bin/cpp_container src/cmd/cpp/container.go
+go build -o bin/clike_compiler src/cmd/clike/compiler.go
+go build -o bin/clike_container src/cmd/clike/container.go
 
 echo "Enable automatically removing empty cgroups..."
 echo 1 > /sys/fs/cgroup/cpu/notify_on_release

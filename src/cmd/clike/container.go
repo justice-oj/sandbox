@@ -6,9 +6,13 @@ import (
 	"syscall"
 	"flag"
 	"strconv"
+	"bytes"
+	"strings"
+	"os/exec"
+	"time"
 
-	"github.com/satori/go.uuid"
 	"github.com/docker/docker/pkg/reexec"
+	"github.com/satori/go.uuid"
 	"github.com/getsentry/raven-go"
 
 	"../../model"
@@ -30,13 +34,62 @@ func justiceInit() {
 	expected := os.Args[3]
 	timeout, _ := strconv.ParseInt(os.Args[4], 10, 32)
 
-	os.Stderr.WriteString("justiceInit starting... \n")
-	sandbox.Run(int32(timeout), basedir, input, expected, "/Main")
-	os.Stderr.WriteString("justiceInit done \n")
+	r := new(model.Result)
+	if err := sandbox.InitNamespace(basedir); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
+		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		os.Exit(0)
+	}
+
+	var o, e bytes.Buffer
+	cmd := exec.Command("/Main")
+	cmd.Stdin = strings.NewReader(input)
+	cmd.Stdout = &o
+	cmd.Stderr = &e
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+	cmd.Env = []string{"PS1=[justice] # "}
+
+	time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
+		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	})
+
+	startTime := time.Now().UnixNano() / int64(time.Millisecond)
+	if err := cmd.Run(); err != nil {
+		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
+		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		os.Stderr.WriteString("Error: " + err.Error() + "\n")
+		return
+	}
+	endTime := time.Now().UnixNano() / int64(time.Millisecond)
+
+	if e.Len() > 0 {
+		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
+		os.Stdout.Write(result)
+		os.Stderr.WriteString("stderr: " + e.String() + "\n")
+		return
+	}
+
+	output := strings.TrimSpace(o.String())
+	if output == expected {
+		// ms, MB
+		timeCost, memoryCost := endTime-startTime, cmd.ProcessState.SysUsage().(*syscall.Rusage).Maxrss/1024
+		result, _ := json.Marshal(r.GetAcceptedTaskResult(timeCost, memoryCost))
+		os.Stdout.Write(result)
+	} else {
+		result, _ := json.Marshal(r.GetWrongAnswerTaskResult(input, output, expected))
+		os.Stdout.Write(result)
+	}
+
+	os.Stderr.WriteString("output: " + output + " | " + "expected: " + expected + "\n")
 }
 
+// logs will be printed to os.Stderr
 func main() {
-	basedir := flag.String("basedir", "/tmp", "basedir of tmp CPP binary")
+	basedir := flag.String("basedir", "/tmp", "basedir of tmp C binary")
 	input := flag.String("input", "<input>", "test case input")
 	expected := flag.String("expected", "<expected>", "test case expected")
 	timeout := flag.String("timeout", "2000", "timeout in milliseconds")
@@ -82,8 +135,8 @@ func main() {
 	if err := cmd.Run(); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
+		os.Stderr.WriteString(err.Error() + "\n")
 		os.Stdout.Write(result)
-		os.Stderr.WriteString(err.Error())
 	}
 
 	os.Exit(0)
