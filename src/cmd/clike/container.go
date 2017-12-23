@@ -89,6 +89,11 @@ func justiceInit() {
 	if output == expected {
 		// ms, MB
 		timeCost, memoryCost := endTime-startTime, cmd.ProcessState.SysUsage().(*syscall.Rusage).Maxrss/1024
+		// timeCost value 0 will be omitted
+		if timeCost == 0 {
+			timeCost = 1
+		}
+
 		result, _ := json.Marshal(r.GetAcceptedTaskResult(timeCost, memoryCost))
 		os.Stdout.Write(result)
 	} else {
