@@ -1,11 +1,11 @@
 package gotest
 
 import (
-	"testing"
+	"bytes"
 	"os"
 	"os/exec"
-	"bytes"
 	"strings"
+	"testing"
 )
 
 // HELPER
@@ -27,7 +27,7 @@ func copyCSourceFile(name string, t *testing.T) (string, string) {
 
 // HELPER
 // compile C source file
-func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
+func compileC(name, baseDir, projectDir string, t *testing.T) string {
 	t.Logf("Compiling file %s ...", name)
 
 	var stderr bytes.Buffer
@@ -43,7 +43,7 @@ func compileC(name, baseDir, projectDir string, t *testing.T) (string) {
 
 // HELPER
 // run C binary in our container
-func runC(baseDir, projectDir, memory, timeout string, t *testing.T) (string) {
+func runC(baseDir, projectDir, memory, timeout string, t *testing.T) string {
 	t.Log("Running binary /Main ...")
 
 	var stdout, stderr bytes.Buffer

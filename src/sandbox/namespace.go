@@ -1,11 +1,12 @@
 package sandbox
 
 import (
+	"os"
 	"path/filepath"
 	"syscall"
-	"os"
 )
 
+//noinspection GoUnusedExportedFunction
 func InitNamespace(newRoot string) error {
 	os.Stderr.WriteString("InitNamespace starting...\n")
 

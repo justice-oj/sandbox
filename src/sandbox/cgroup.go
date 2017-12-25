@@ -1,9 +1,9 @@
 package sandbox
 
 import (
-	"path/filepath"
-	"os"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 const (
@@ -12,6 +12,7 @@ const (
 	cgMemoryPathPrefix = "/sys/fs/cgroup/memory/"
 )
 
+//noinspection GoUnusedExportedFunction
 func InitCGroup(pid, containerID, memory string) error {
 	os.Stderr.WriteString("InitCGroup starting...\n")
 

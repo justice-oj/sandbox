@@ -1,11 +1,11 @@
 package gotest
 
 import (
-	"testing"
-	"os"
 	"bytes"
-	"strings"
+	"os"
 	"os/exec"
+	"strings"
+	"testing"
 )
 
 // HELPER
@@ -27,7 +27,7 @@ func copyCppSourceFile(name string, t *testing.T) (string, string) {
 
 // HELPER
 // compile CPP source file
-func compileCpp(name, baseDir, projectDir string, t *testing.T) (string) {
+func compileCpp(name, baseDir, projectDir string, t *testing.T) string {
 	t.Logf("Compiling file %s ...", name)
 
 	var stderr bytes.Buffer
@@ -43,7 +43,7 @@ func compileCpp(name, baseDir, projectDir string, t *testing.T) (string) {
 
 // HELPER
 // run CPP binary in our container
-func runCpp(baseDir, projectDir, memory, timeout string, t *testing.T) (string) {
+func runCpp(baseDir, projectDir, memory, timeout string, t *testing.T) string {
 	t.Log("Running file /Main ...")
 
 	var stdout, stderr bytes.Buffer
