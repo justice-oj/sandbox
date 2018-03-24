@@ -114,8 +114,9 @@ func main() {
 	flag.Parse()
 
 	result := new(model.Result)
+	u, _ := uuid.NewV4()
 
-	if err := sandbox.InitCGroup(strconv.Itoa(os.Getpid()), uuid.NewV4().String(), *memory); err != nil {
+	if err := sandbox.InitCGroup(strconv.Itoa(os.Getpid()), u.String(), *memory); err != nil {
 		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
 		os.Stdout.Write(result)

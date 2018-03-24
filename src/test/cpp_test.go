@@ -31,7 +31,7 @@ func compileCpp(name, baseDir, projectDir string, t *testing.T) string {
 	t.Logf("Compiling file %s ...", name)
 
 	var stderr bytes.Buffer
-	args := []string{"-compiler=/usr/bin/g++", "-basedir=" + baseDir, "-filename=Main.cpp", "-timeout=5000", "-std=gnu++14"}
+	args := []string{"-compiler=/usr/bin/g++", "-basedir=" + baseDir, "-filename=Main.cpp", "-timeout=3000", "-std=gnu++14"}
 	cmd := exec.Command(projectDir+"/bin/clike_compiler", args...)
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
@@ -131,6 +131,24 @@ func TestCppCompilerBomb4(t *testing.T) {
 	}
 }
 
+func TestCppCoreDump0(t *testing.T) {
+	name := "core_dump_0.cpp"
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	defer os.RemoveAll(baseDir)
+
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
+	if len(compilerStderr) > 0 {
+		t.Error(compilerStderr)
+		return
+	}
+
+	// terminate called after throwing an instance of 'char const*'
+	containerOutput := runCpp(baseDir, projectDir, "64", "1000", t)
+	if !strings.Contains(containerOutput, "Runtime Error") {
+		t.Error(containerOutput)
+	}
+}
+
 func TestCppForkBomb(t *testing.T) {
 	name := "fork_bomb.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
@@ -161,6 +179,23 @@ func TestCppIncludeLeaks(t *testing.T) {
 
 func TestCppInfiniteLoop(t *testing.T) {
 	name := "infinite_loop.cpp"
+	baseDir, projectDir := copyCppSourceFile(name, t)
+	defer os.RemoveAll(baseDir)
+
+	compilerStderr := compileCpp(name, baseDir, projectDir, t)
+	if len(compilerStderr) > 0 {
+		t.Error(compilerStderr)
+		return
+	}
+
+	containerOutput := runCpp(baseDir, projectDir, "64", "1000", t)
+	if !strings.Contains(containerOutput, "Runtime Error") {
+		t.Error(containerOutput)
+	}
+}
+
+func TestCppMemoryAllocation(t *testing.T) {
+	name := "memory_allocation.cpp"
 	baseDir, projectDir := copyCppSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
 

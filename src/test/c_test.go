@@ -31,7 +31,7 @@ func compileC(name, baseDir, projectDir string, t *testing.T) string {
 	t.Logf("Compiling file %s ...", name)
 
 	var stderr bytes.Buffer
-	args := []string{"-compiler=/usr/bin/gcc", "-basedir=" + baseDir, "-filename=Main.c", "-timeout=5000", "-std=gnu11"}
+	args := []string{"-compiler=/usr/bin/gcc", "-basedir=" + baseDir, "-filename=Main.c", "-timeout=3000", "-std=gnu11"}
 	cmd := exec.Command(projectDir+"/bin/clike_compiler", args...)
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
@@ -109,8 +109,91 @@ func TestCCompilerBomb2(t *testing.T) {
 	}
 }
 
-func TestCForkBomb(t *testing.T) {
-	name := "fork_bomb.c"
+func TestCCompilerBomb3(t *testing.T) {
+	name := "compiler_bomb_3.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	defer os.RemoveAll(baseDir)
+
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+	if !strings.Contains(compilerStderr, "signal: killed") {
+		t.Error(compilerStderr + " => Compile error does not contain string `signal: killed`")
+	}
+}
+
+func TestCCoreDump0(t *testing.T) {
+	name := "core_dump_0.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	defer os.RemoveAll(baseDir)
+
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+	if len(compilerStderr) > 0 {
+		t.Error(compilerStderr)
+		return
+	}
+
+	// function 'foo' recurses infinitely
+	containerOutput := runC(baseDir, projectDir, "64", "1000", t)
+	if !strings.Contains(containerOutput, "Runtime Error") {
+		t.Error(containerOutput)
+	}
+}
+
+func TestCCoreDump1(t *testing.T) {
+	name := "core_dump_1.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	defer os.RemoveAll(baseDir)
+
+	// warning: division by zero [-Wdiv-by-zero]
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+	if len(compilerStderr) > 0 {
+		t.Error(compilerStderr)
+		return
+	}
+
+	containerOutput := runC(baseDir, projectDir, "64", "1000", t)
+	if !strings.Contains(containerOutput, "Runtime Error") {
+		t.Error(containerOutput)
+	}
+}
+
+func TestCCoreDump2(t *testing.T) {
+	name := "core_dump_2.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	defer os.RemoveAll(baseDir)
+
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+	if len(compilerStderr) > 0 {
+		t.Error(compilerStderr)
+		return
+	}
+
+	// *** stack smashing detected ***: terminated
+	containerOutput := runC(baseDir, projectDir, "64", "1000", t)
+	if !strings.Contains(containerOutput, "Runtime Error") {
+		t.Error(containerOutput)
+	}
+}
+
+func TestCForkBomb0(t *testing.T) {
+	name := "fork_bomb_0.c"
+	baseDir, projectDir := copyCSourceFile(name, t)
+	defer os.RemoveAll(baseDir)
+
+	compilerStderr := compileC(name, baseDir, projectDir, t)
+	if len(compilerStderr) > 0 {
+		t.Error(compilerStderr)
+		return
+	}
+
+	// got `signal: killed`
+	containerOutput := runC(baseDir, projectDir, "64", "1000", t)
+	if !strings.Contains(containerOutput, "Runtime Error") {
+		t.Error(containerOutput)
+	}
+}
+
+func TestCForkBomb1(t *testing.T) {
+	name := "fork_bomb_1.c"
 	baseDir, projectDir := copyCSourceFile(name, t)
 	defer os.RemoveAll(baseDir)
 
