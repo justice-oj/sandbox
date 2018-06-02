@@ -15,9 +15,9 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/satori/go.uuid"
 
-	"../../config"
-	"../../model"
-	"../../sandbox"
+	"github.com/justice-oj/sandbox/src/config"
+	"github.com/justice-oj/sandbox/src/model"
+	"github.com/justice-oj/sandbox/src/sandbox"
 )
 
 func init() {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/getsentry/raven-go"
 
-	"../../config"
+	"github.com/justice-oj/sandbox/src/config"
 )
 
 // compiler wrapper with timeout limitation
