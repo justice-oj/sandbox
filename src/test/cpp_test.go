@@ -14,7 +14,7 @@ func copyCppSourceFile(name string, t *testing.T) (string, string) {
 	t.Logf("Copying file %s ...", name)
 
 	absPath, _ := os.Getwd()
-	baseDir, projectDir := absPath+"/tmp", absPath+"/../.."
+	baseDir, projectDir := absPath+"/tmp", "/opt/justice-sandbox"
 	os.MkdirAll(baseDir, os.ModePerm)
 
 	cmd := exec.Command("cp", projectDir+"/src/test/resources/cpp/"+name, baseDir+"/Main.cpp")
