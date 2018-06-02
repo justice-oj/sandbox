@@ -337,7 +337,7 @@ func TestCSyscall0(t *testing.T) {
 	}
 
 	containerOutput := runC(baseDir, "16", "1000", t)
-	if !strings.Contains(containerOutput, "\"status\":2") {
+	if !strings.Contains(containerOutput, "\"status\":5") {
 		t.Error(containerOutput)
 	}
 }
