@@ -76,17 +76,6 @@ func TestCppAC(t *testing.T) {
 	}
 }
 
-func TestCppCompilerBomb0(t *testing.T) {
-	name := "compiler_bomb_0.cpp"
-	baseDir := copyCppSourceFile(name, t)
-	defer os.RemoveAll(baseDir)
-
-	compilerStderr := compileCpp(name, baseDir, t)
-	if !strings.Contains(compilerStderr, "signal: killed") {
-		t.Error(compilerStderr + " => Compile error does not contain string `signal: killed`")
-	}
-}
-
 func TestCppCompilerBomb1(t *testing.T) {
 	name := "compiler_bomb_1.cpp"
 	baseDir := copyCppSourceFile(name, t)
