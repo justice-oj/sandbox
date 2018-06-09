@@ -1,4 +1,4 @@
-package main
+package sandbox
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/getsentry/raven-go"
 
-	"github.com/justice-oj/sandbox/src/config"
+	"github.com/justice-oj/sandbox/config"
 )
 
 // compiler wrapper with timeout limitation
