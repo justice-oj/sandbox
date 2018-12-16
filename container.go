@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -12,16 +13,13 @@ import (
 	"time"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/getsentry/raven-go"
 	"github.com/satori/go.uuid"
 
-	"github.com/justice-oj/sandbox/config"
 	"github.com/justice-oj/sandbox/model"
 	"github.com/justice-oj/sandbox/sandbox"
 )
 
 func init() {
-	raven.SetDSN(config.SENTRY_DSN)
 	// register "justiceInit" => justiceInit() every time
 	reexec.Register("justiceInit", justiceInit)
 
@@ -48,9 +46,8 @@ func justiceInit() {
 
 	r := new(model.Result)
 	if err := sandbox.InitNamespace(basedir); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
+		_, _ = os.Stdout.Write(result)
 		os.Exit(0)
 	}
 
@@ -65,23 +62,22 @@ func justiceInit() {
 	cmd.Env = []string{"PS1=[justice] # "}
 
 	time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() {
-		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	})
 
 	startTime := time.Now().UnixNano() / int64(time.Millisecond)
 	if err := cmd.Run(); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		os.Stderr.WriteString("Error: " + err.Error() + "\n")
+		_, _ = os.Stdout.Write(result)
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("err: %s\n", err.Error()))
 		return
 	}
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
 
 	if e.Len() > 0 {
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
-		os.Stderr.WriteString("stderr: " + e.String() + "\n")
+		_, _ = os.Stdout.Write(result)
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("stderr: %s\n", e.String()))
 		return
 	}
 
@@ -95,13 +91,13 @@ func justiceInit() {
 		}
 
 		result, _ := json.Marshal(r.GetAcceptedTaskResult(timeCost, memoryCost))
-		os.Stdout.Write(result)
+		_, _ = os.Stdout.Write(result)
 	} else {
 		result, _ := json.Marshal(r.GetWrongAnswerTaskResult(input, output, expected))
-		os.Stdout.Write(result)
+		_, _ = os.Stdout.Write(result)
 	}
 
-	os.Stderr.WriteString("output: " + output + " | " + "expected: " + expected + "\n")
+	_, _ = os.Stderr.WriteString(fmt.Sprintf("output: %s | expected: %s\n", output, expected))
 }
 
 // logs will be printed to os.Stderr
@@ -113,13 +109,10 @@ func main() {
 	memory := flag.String("memory", "256", "memory limitation in MB")
 	flag.Parse()
 
-	result := new(model.Result)
-	u, _ := uuid.NewV4()
-
+	result, u := new(model.Result), uuid.NewV4()
 	if err := sandbox.InitCGroup(strconv.Itoa(os.Getpid()), u.String(), *memory); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "InitContainerFailed"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
-		os.Stdout.Write(result)
+		_, _ = os.Stdout.Write(result)
 		os.Exit(0)
 	}
 
@@ -151,10 +144,9 @@ func main() {
 	}
 
 	if err := cmd.Run(); err != nil {
-		raven.CaptureErrorAndWait(err, map[string]string{"error": "ContainerRunTimeError"})
 		result, _ := json.Marshal(result.GetRuntimeErrorTaskResult())
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stdout.Write(result)
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("%s\n", err.Error()))
+		_, _ = os.Stdout.Write(result)
 	}
 
 	os.Exit(0)

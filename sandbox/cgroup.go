@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,7 +15,7 @@ const (
 
 //noinspection GoUnusedExportedFunction
 func InitCGroup(pid, containerID, memory string) error {
-	os.Stderr.WriteString("InitCGroup starting...\n")
+	_, _ = os.Stderr.WriteString(fmt.Sprintf("InitCGroup(%s, %s, %s) starting...\n", pid, containerID, memory))
 
 	dirs := []string{
 		filepath.Join(cgCPUPathPrefix, containerID),
@@ -23,95 +24,88 @@ func InitCGroup(pid, containerID, memory string) error {
 	}
 
 	for _, dir := range dirs {
-		os.Stderr.WriteString("os.MkdirAll " + dir + "\n")
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Stderr.WriteString("os.MkdirAll " + dir + " failed \n")
+			_, _ = os.Stderr.WriteString(fmt.Sprintf("os.MkdirAll(%s, os.ModePerm) failed, err: %s\n", dir, err.Error()))
 			return err
 		}
 	}
 
 	if err := cpuCGroup(pid, containerID); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("cpuCGroup failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("cpuCGroup(%s, %s) failed, err: %s\n", pid, containerID, err.Error()))
 		return err
 	}
 
 	if err := pidCGroup(pid, containerID); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("pidCGroup failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("pidCGroup(%s, %s) failed, err: %s\n", pid, containerID, err.Error()))
 		return err
 	}
 
 	if err := memoryCGroup(pid, containerID, memory); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("memoryCGroup failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("memoryCGroup(%s, %s) failed, err: %s\n", pid, containerID, err.Error()))
 		return err
 	}
 
-	os.Stderr.WriteString("InitCGroup done...\n")
+	_, _ = os.Stderr.WriteString(fmt.Sprintf("InitCGroup(%s, %s, %s) done\n", pid, containerID, memory))
 	return nil
 }
 
 // https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
 func cpuCGroup(pid, containerID string) error {
 	cgCPUPath := filepath.Join(cgCPUPathPrefix, containerID)
+	mapping := map[string]string{
+		"tasks":            pid,
+		"cpu.cfs_quota_us": "10000",
+	}
 
-	keys := []string{"tasks", "cpu.cfs_quota_us"}
-	values := []string{pid, "10000"}
-	for k, v := range keys {
-		path := filepath.Join(cgCPUPath, v)
-		os.Stderr.WriteString("writing [" + values[k] + "] to file: " + path + "\n")
-		if err := ioutil.WriteFile(path, []byte(values[k]), 0644); err != nil {
-			os.Stderr.WriteString("write failed \n")
+	for key, value := range mapping {
+		path := filepath.Join(cgCPUPath, key)
+		if err := ioutil.WriteFile(path, []byte(value), 0644); err != nil {
+			_, _ = os.Stderr.WriteString(fmt.Sprintf("Writing [%s] to file: %s failed\n", value, path))
 			return err
 		}
 		c, _ := ioutil.ReadFile(path)
-		os.Stderr.WriteString("content of " + path + ": " + string(c))
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("Content of %s is: %s", path, c))
 	}
-
-	os.Stderr.WriteString("cpuCGroup done\n")
 	return nil
 }
 
 // https://www.kernel.org/doc/Documentation/cgroup-v1/pids.txt
 func pidCGroup(pid, containerID string) error {
 	cgPidPath := filepath.Join(cgPidPathPrefix, containerID)
+	mapping := map[string]string{
+		"cgroup.procs": pid,
+		"pids.max":     "64",
+	}
 
-	keys := []string{"cgroup.procs", "pids.max"}
-	values := []string{pid, "64"}
-	for k, v := range keys {
-		path := filepath.Join(cgPidPath, v)
-		os.Stderr.WriteString("writing [" + values[k] + "] to file: " + path + "\n")
-		if err := ioutil.WriteFile(path, []byte(values[k]), 0644); err != nil {
-			os.Stderr.WriteString("write failed \n")
+	for key, value := range mapping {
+		path := filepath.Join(cgPidPath, key)
+		if err := ioutil.WriteFile(path, []byte(value), 0644); err != nil {
+			_, _ = os.Stderr.WriteString(fmt.Sprintf("Writing [%s] to file: %s failed\n", value, path))
 			return err
 		}
 		c, _ := ioutil.ReadFile(path)
-		os.Stderr.WriteString("content of " + path + ": " + string(c))
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("Content of %s is: %s", path, c))
 	}
-
-	os.Stderr.WriteString("pidCGroup done \n")
 	return nil
 }
 
 // https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
 func memoryCGroup(pid, containerID, memory string) error {
 	cgMemoryPath := filepath.Join(cgMemoryPathPrefix, containerID)
+	mapping := map[string]string{
+		"memory.kmem.limit_in_bytes": "64m",
+		"tasks":                      pid,
+		"memory.limit_in_bytes":      fmt.Sprintf("%sm", memory),
+	}
 
-	keys := []string{"memory.kmem.limit_in_bytes", "tasks", "memory.limit_in_bytes"}
-	values := []string{"64m", pid, memory + "m"}
-	for k, v := range keys {
-		path := filepath.Join(cgMemoryPath, v)
-		os.Stderr.WriteString("writing [" + values[k] + "] to file: " + path + "\n")
-		if err := ioutil.WriteFile(path, []byte(values[k]), 0644); err != nil {
-			os.Stderr.WriteString("write failed \n")
+	for key, value := range mapping {
+		path := filepath.Join(cgMemoryPath, key)
+		if err := ioutil.WriteFile(path, []byte(value), 0644); err != nil {
+			_, _ = os.Stderr.WriteString(fmt.Sprintf("Writing [%s] to file: %s failed\n", value, path))
 			return err
 		}
 		c, _ := ioutil.ReadFile(path)
-		os.Stderr.WriteString("content of " + path + ": " + string(c))
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("Content of %s is: %s", path, c))
 	}
-
-	os.Stderr.WriteString("memoryCGroup done \n")
 	return nil
 }

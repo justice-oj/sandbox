@@ -11,35 +11,35 @@ type Result struct {
 }
 
 const (
-	STATUS_AC  = iota
+	StatusAc = iota
 	_
-	STATUS_RE
-	STATUS_TLE
+	StatusRe
+	StatusTle
 	_
-	STATUS_WA
+	StatusWa
 )
 
 func (r *Result) GetAcceptedTaskResult(runtime, memory int64) *Result {
-	r.Status = STATUS_AC
+	r.Status = StatusAc
 	r.Runtime = runtime
 	r.Memory = memory
 	return r
 }
 
 func (r *Result) GetRuntimeErrorTaskResult() *Result {
-	r.Status = STATUS_RE
+	r.Status = StatusRe
 	r.Error = "Runtime Error"
 	return r
 }
 
 func (r *Result) GetTimeLimitExceededErrorTaskResult() *Result {
-	r.Status = STATUS_TLE
+	r.Status = StatusTle
 	r.Error = "Runtime Error"
 	return r
 }
 
 func (r *Result) GetWrongAnswerTaskResult(input, output, expected string) *Result {
-	r.Status = STATUS_WA
+	r.Status = StatusWa
 	r.Input = input
 	r.Output = output
 	r.Expected = expected

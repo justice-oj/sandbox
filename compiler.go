@@ -3,14 +3,11 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
 	"time"
-
-	"github.com/getsentry/raven-go"
-
-	"github.com/justice-oj/sandbox/config"
 )
 
 // compiler wrapper with timeout limitation
@@ -24,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	var stdout, stderr bytes.Buffer
-	cmd := exec.Command(*compiler, *filename, "-save-temps", "-std=" + *std, "-fmax-errors=10", "-static", "-o", "Main")
+	cmd := exec.Command(*compiler, *filename, "-save-temps", "-std="+*std, "-fmax-errors=10", "-static", "-o", "Main")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 	}
@@ -33,19 +30,14 @@ func main() {
 	cmd.Dir = *basedir
 
 	time.AfterFunc(time.Duration(*timeout)*time.Millisecond, func() {
-		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	})
 
 	if err := cmd.Run(); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString(stderr.String())
 		// err.Error() == "signal: killed" means compiler is killed by our timer.
-		if err.Error() == "signal: killed" {
-			raven.SetDSN(config.SENTRY_DSN)
-			raven.CaptureMessageAndWait(*basedir, map[string]string{"error": "CompileTimeExceeded"})
-		}
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("stderr: %s, err: %s\n", stderr.String(), err.Error()))
 		return
 	}
 
-	os.Stdout.WriteString("Compile OK")
+	_, _ = os.Stdout.WriteString("Compile OK\n")
 }

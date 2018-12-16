@@ -15,7 +15,7 @@ func copyCppSourceFile(name string, t *testing.T) string {
 
 	absPath, _ := os.Getwd()
 	baseDir, projectDir := absPath+"/tmp", absPath
-	os.MkdirAll(baseDir, os.ModePerm)
+	_ = os.MkdirAll(baseDir, os.ModePerm)
 
 	cmd := exec.Command("cp", projectDir+"/resources/cpp/"+name, baseDir+"/Main.cpp")
 	if err := cmd.Run(); err != nil {

@@ -15,7 +15,7 @@ func copyCSourceFile(name string, t *testing.T) string {
 
 	absPath, _ := os.Getwd()
 	baseDir, projectDir := absPath+"/tmp", absPath
-	os.MkdirAll(baseDir, os.ModePerm)
+	_ = os.MkdirAll(baseDir, os.ModePerm)
 
 	cmd := exec.Command("cp", projectDir+"/resources/c/"+name, baseDir+"/Main.c")
 	if err := cmd.Run(); err != nil {

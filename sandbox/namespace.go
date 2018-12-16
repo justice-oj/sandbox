@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -8,21 +9,19 @@ import (
 
 //noinspection GoUnusedExportedFunction
 func InitNamespace(newRoot string) error {
-	os.Stderr.WriteString("InitNamespace starting...\n")
+	_, _ = os.Stderr.WriteString(fmt.Sprintf("InitNamespace(%s) starting...\n", newRoot))
 
 	if err := pivotRoot(newRoot); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("pivotRoot failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("pivotRoot(%s) failed, err: %s\n", newRoot, err.Error()))
 		return err
 	}
 
 	if err := syscall.Sethostname([]byte("justice")); err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Stderr.WriteString("Sethostname failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("syscall.Sethostname failed, err: %s\n", err.Error()))
 		return err
 	}
 
-	os.Stderr.WriteString("InitNamespace done \n")
+	_, _ = os.Stderr.WriteString(fmt.Sprintf("InitNamespace(%s) done\n", newRoot))
 	return nil
 }
 
@@ -38,19 +37,19 @@ func pivotRoot(newRoot string) error {
 	//     number of /.. to the string pointed to by put_old must yield the same directory as new_root.
 	// 4.  No other filesystem may be mounted on put_old.
 	if err := syscall.Mount(newRoot, newRoot, "", syscall.MS_BIND|syscall.MS_REC, ""); err != nil {
-		os.Stderr.WriteString("Mount newRoot failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("syscall.Mount(%s, %s, \"\", syscall.MS_BIND|syscall.MS_REC, \"\") failed\n", newRoot, newRoot))
 		return err
 	}
 
 	// create put_old directory
 	if err := os.MkdirAll(putOld, 0700); err != nil {
-		os.Stderr.WriteString("Mkdir putOld failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("os.MkdirAll(%s, 0700) failed\n", putOld))
 		return err
 	}
 
 	// call pivotRoot
 	if err := syscall.PivotRoot(newRoot, putOld); err != nil {
-		os.Stderr.WriteString("PivotRoot failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("syscall.PivotRoot(%s, %s) failed\n", newRoot, putOld))
 		return err
 	}
 
@@ -58,20 +57,20 @@ func pivotRoot(newRoot string) error {
 	// or may not affect its current working directory.  It is therefore
 	// recommended to call chdir("/") immediately after pivotRoot().
 	if err := os.Chdir("/"); err != nil {
-		os.Stderr.WriteString("Chdir / failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("os.Chdir(\"/\") failed\n"))
 		return err
 	}
 
 	// umount put_old, which now lives at /.pivot_root
 	putOld = "/.pivot_root"
 	if err := syscall.Unmount(putOld, syscall.MNT_DETACH); err != nil {
-		os.Stderr.WriteString("Unmount putOld failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("syscall.Unmount(%s, syscall.MNT_DETACH) failed\n", putOld))
 		return err
 	}
 
 	// remove put_old
 	if err := os.RemoveAll(putOld); err != nil {
-		os.Stderr.WriteString("Remove putOld failed...\n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("os.RemoveAll(%s) failed\n", putOld))
 		return err
 	}
 
