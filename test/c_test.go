@@ -11,20 +11,20 @@ import (
 )
 
 var (
-	baseDir    string
-	projectDir string
+	CBaseDir    string
+	CProjectDir string
 )
 
 // copy test source file `*.c` to tmp dir
 func copyCSourceFile(name string, t *testing.T) {
 	t.Logf("Copying file %s ...", name)
-	if err := os.MkdirAll(baseDir, os.ModePerm); err != nil {
-		t.Errorf("Invoke mkdir(%s) err: %v", baseDir, err.Error())
+	if err := os.MkdirAll(CBaseDir, os.ModePerm); err != nil {
+		t.Errorf("Invoke mkdir(%s) err: %v", CBaseDir, err.Error())
 	}
 
 	args := []string{
-		projectDir + "/resources/c/" + name,
-		baseDir + "/Main.c",
+		CProjectDir + "/resources/c/" + name,
+		CBaseDir + "/Main.c",
 	}
 	cmd := exec.Command("cp", args...)
 	if err := cmd.Run(); err != nil {
@@ -76,315 +76,313 @@ func runC(baseDir, memory, timeout string, t *testing.T) string {
 	return stdout.String()
 }
 
-func TestMain(m *testing.M) {
-	projectDir, _ = os.Getwd()
-	baseDir = projectDir + "/tmp"
-
-	os.Exit(m.Run())
+func TestC0000Fixture(t *testing.T) {
+	CProjectDir, _ = os.Getwd()
+	CBaseDir = CProjectDir + "/tmp"
 }
 
-func TestCAC(t *testing.T) {
+func TestC0001AC(t *testing.T) {
 	name := "ac.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, `"status":0`)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, `"status":0`)
 	})
 }
 
-func TestCCompilerBomb0(t *testing.T) {
+func TestC0002CompilerBomb0(t *testing.T) {
 	name := "compiler_bomb_0.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldContainSubstring, "signal: killed")
+		So(compileC(name, CBaseDir, t), ShouldContainSubstring, "signal: killed")
 	})
 }
 
-func TestCCompilerBomb1(t *testing.T) {
+func TestC0003CompilerBomb1(t *testing.T) {
 	name := "compiler_bomb_1.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldContainSubstring, "signal: killed")
+		So(compileC(name, CBaseDir, t), ShouldContainSubstring, "signal: killed")
 	})
 }
 
-func TestCCompilerBomb2(t *testing.T) {
+func TestC0004CompilerBomb2(t *testing.T) {
 	name := "compiler_bomb_2.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldContainSubstring, "signal: killed")
+		So(compileC(name, CBaseDir, t), ShouldContainSubstring, "signal: killed")
 	})
 }
 
-func TestCCompilerBomb3(t *testing.T) {
+func TestC0005CompilerBomb3(t *testing.T) {
 	name := "compiler_bomb_3.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldContainSubstring, "signal: killed")
+		So(compileC(name, CBaseDir, t), ShouldContainSubstring, "signal: killed")
 	})
 }
 
-func TestCCoreDump0(t *testing.T) {
+func TestC0006CoreDump0(t *testing.T) {
 	name := "core_dump_0.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
 
-func TestCCoreDump1(t *testing.T) {
+func TestC0007CoreDump1(t *testing.T) {
 	name := "core_dump_1.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
 		// warning: division by zero [-Wdiv-by-zero]
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
 
-func TestCCoreDump2(t *testing.T) {
+func TestC0008CoreDump2(t *testing.T) {
 	name := "core_dump_2.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
 		// *** stack smashing detected ***: terminated
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
 
-func TestCForkBomb0(t *testing.T) {
+func TestC0009ForkBomb0(t *testing.T) {
 	name := "fork_bomb_0.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
 		// got `signal: killed`
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
 
-func TestCForkBomb1(t *testing.T) {
+func TestC0010ForkBomb1(t *testing.T) {
 	name := "fork_bomb_1.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
 		// got `signal: killed`
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
 
-func TestCGetHostByName(t *testing.T) {
+func TestC0011GetHostByName(t *testing.T) {
 	name := "get_host_by_name.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
 		// Main.c:(.text+0x28): warning: Using 'gethostbyname' in statically linked applications
 		// requires at runtime the shared libraries from the glibc version used for linking
 		// got `exit status 1`
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, `"status":2`)
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, `"status":2`)
 	})
 }
 
-func TestCIncludeLeaks(t *testing.T) {
+func TestC0012IncludeLeaks(t *testing.T) {
 	name := "include_leaks.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldContainSubstring, "/etc/shadow")
+		So(compileC(name, CBaseDir, t), ShouldContainSubstring, "/etc/shadow")
 	})
 }
 
-func TestCInfiniteLoop(t *testing.T) {
+func TestC0013InfiniteLoop(t *testing.T) {
 	name := "infinite_loop.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
 		// got `signal: killed`
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
 
-func TestCMemoryAllocation(t *testing.T) {
+func TestC0014MemoryAllocation(t *testing.T) {
 	name := "memory_allocation.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "8", "5000", t), ShouldContainSubstring, "Runtime Error")
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "8", "5000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
 
-func TestCPlainText(t *testing.T) {
+func TestC0015PlainText(t *testing.T) {
 	name := "plain_text.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldContainSubstring, "error")
+		So(compileC(name, CBaseDir, t), ShouldContainSubstring, "error")
 	})
 }
 
-func TestCRunCommandLine0(t *testing.T) {
+func TestC0016RunCommandLine0(t *testing.T) {
 	name := "run_command_line_0.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, `"status":5`)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, `"status":5`)
 	})
 }
 
-func TestCRunCommandLine1(t *testing.T) {
+func TestC0017RunCommandLine1(t *testing.T) {
 	name := "run_command_line_1.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "64", "1000", t), ShouldContainSubstring, `"status":5`)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "64", "1000", t), ShouldContainSubstring, `"status":5`)
 	})
 }
 
-func aTestCSyscall0(t *testing.T) {
+func fixmeTestC0018Syscall0(t *testing.T) {
 	name := "syscall_0.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "16", "1000", t), ShouldContainSubstring, `"status":5`)
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "16", "1000", t), ShouldContainSubstring, `"status":5`)
 	})
 }
 
-func TestCTCPClient(t *testing.T) {
+func TestC0019TCPClient(t *testing.T) {
 	name := "tcp_client.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
 		defer func() {
-			if err := os.RemoveAll(baseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", baseDir, err)
+			if err := os.RemoveAll(CBaseDir); err != nil {
+				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CBaseDir, err)
 				t.FailNow()
 			}
 		}()
 
-		So(compileC(name, baseDir, t), ShouldBeEmpty)
-		So(runC(baseDir, "16", "5000", t), ShouldContainSubstring, "Runtime Error")
+		So(compileC(name, CBaseDir, t), ShouldBeEmpty)
+		So(runC(CBaseDir, "16", "5000", t), ShouldContainSubstring, "Runtime Error")
 	})
 }
