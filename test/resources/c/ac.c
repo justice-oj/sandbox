@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(void) {
+int main() {
     int hh, mm, ss;
     char tt[3] = "";
 

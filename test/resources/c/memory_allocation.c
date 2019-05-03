@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int main(void) {
+int main() {
     int chunk_size = 1024 * 1024;
     void *p = NULL;
 

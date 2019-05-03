@@ -65,14 +65,14 @@ func justiceInit() {
 		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	})
 
-	startTime := time.Now().UnixNano() / int64(time.Millisecond)
+	startTime := time.Now().UnixNano() / 1e6
 	if err := cmd.Run(); err != nil {
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
 		_, _ = os.Stdout.Write(result)
 		_, _ = os.Stderr.WriteString(fmt.Sprintf("err: %s\n", err.Error()))
 		return
 	}
-	endTime := time.Now().UnixNano() / int64(time.Millisecond)
+	endTime := time.Now().UnixNano() / 1e6
 
 	if e.Len() > 0 {
 		result, _ := json.Marshal(r.GetRuntimeErrorTaskResult())
