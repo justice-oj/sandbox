@@ -1,7 +1,7 @@
-#include<stdio.h>
-#include<string.h>
-#include<netdb.h>
-#include<arpa/inet.h>
+#include <stdio.h>
+#include <string.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 int main(int argc, char *argv[]) {
     char *hostname = "www.amazon.com";
