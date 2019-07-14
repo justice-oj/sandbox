@@ -3,11 +3,12 @@ package test
 import (
 	"bytes"
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
