@@ -1,3 +1,6 @@
+// +build linux
+// +build go1.12
+
 package model
 
 type Result struct {
