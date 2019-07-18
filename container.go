@@ -13,10 +13,9 @@ import (
 	"time"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/satori/go.uuid"
-
 	"github.com/justice-oj/sandbox/model"
 	"github.com/justice-oj/sandbox/sandbox"
+	"github.com/satori/go.uuid"
 )
 
 func init() {
