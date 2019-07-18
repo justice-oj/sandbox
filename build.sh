@@ -3,7 +3,7 @@
 export GO111MODULE=on
 
 echo "Compile binaries..."
-mkdir -p "${PWD}/bin"
+mkdir -p "${PWD}/bin" && rm -rf ${PWD}/bin/clike_*
 go build -o ${PWD}/bin/clike_compiler compiler.go
 go build -o ${PWD}/bin/clike_container container.go
 
