@@ -356,7 +356,7 @@ func TestC0017RunCommandLine1(t *testing.T) {
 	})
 }
 
-func fixmeTestC0018Syscall0(t *testing.T) {
+func TestC0018Syscall0(t *testing.T) {
 	name := "syscall_0.c"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCSourceFile(name, t)
