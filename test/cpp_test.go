@@ -79,19 +79,13 @@ func runCPP(baseDir, memory, timeout string, t *testing.T) string {
 
 func TestCPP0000Fixture(t *testing.T) {
 	CPPProjectDir, _ = os.Getwd()
-	CPPBaseDir = CPPProjectDir + "/tmp"
+	CPPBaseDir = t.TempDir()
 }
 
 func TestCPP0001AC(t *testing.T) {
 	name := "ac.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldBeEmpty)
 		So(runCPP(CPPBaseDir, "16", "1000", t), ShouldContainSubstring, `"status":0`)
@@ -102,12 +96,6 @@ func TestCPP0002CompilerBomb1(t *testing.T) {
 	name := "compiler_bomb_1.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldContainSubstring, "signal: killed")
 	})
@@ -117,12 +105,6 @@ func TestCPP0003CompilerBomb2(t *testing.T) {
 	name := "compiler_bomb_2.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldContainSubstring, "compilation terminated due to -fmax-errors=")
 	})
@@ -132,12 +114,6 @@ func TestCPP0004CompilerBomb3(t *testing.T) {
 	name := "compiler_bomb_3.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldContainSubstring, "template instantiation depth exceeds maximum of")
 	})
@@ -147,12 +123,6 @@ func TestCPP0005CompilerBomb4(t *testing.T) {
 	name := "compiler_bomb_4.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldContainSubstring, "signal: killed")
 	})
@@ -162,12 +132,6 @@ func TestCPP0006CoreDump0(t *testing.T) {
 	name := "core_dump_0.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldBeEmpty)
 		// terminate called after throwing an instance of 'char const*'
@@ -179,12 +143,6 @@ func TestCPP0007ForkBomb(t *testing.T) {
 	name := "fork_bomb.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldBeEmpty)
 		So(runCPP(CPPBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
@@ -195,12 +153,6 @@ func TestCPP0008IncludeLeaks(t *testing.T) {
 	name := "include_leaks.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldContainSubstring, "/etc/shadow")
 	})
@@ -210,12 +162,6 @@ func TestCPP0009InfiniteLoop(t *testing.T) {
 	name := "infinite_loop.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldBeEmpty)
 		So(runCPP(CPPBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
@@ -226,12 +172,6 @@ func TestCPP0010MemoryAllocation(t *testing.T) {
 	name := "memory_allocation.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldBeEmpty)
 		So(runCPP(CPPBaseDir, "64", "1000", t), ShouldContainSubstring, "Runtime Error")
@@ -242,12 +182,6 @@ func TestCPP0011PlainText(t *testing.T) {
 	name := "plain_text.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldContainSubstring, "error")
 	})
@@ -257,12 +191,6 @@ func TestCPP0012RunCommandLine0(t *testing.T) {
 	name := "run_command_line_0.cpp"
 	Convey(fmt.Sprintf("Testing [%s]...", name), t, func() {
 		copyCPPSourceFile(name, t)
-		defer func() {
-			if err := os.RemoveAll(CPPBaseDir); err != nil {
-				t.Errorf("Invoke `os.RemoveAll(%s)` err: %v", CPPBaseDir, err)
-				t.FailNow()
-			}
-		}()
 
 		So(compileCPP(name, CPPBaseDir, t), ShouldBeEmpty)
 		So(runCPP(CPPBaseDir, "16", "1000", t), ShouldContainSubstring, `"status":5`)
